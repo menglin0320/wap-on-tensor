@@ -1,5 +1,6 @@
 import numpy as np
 import tensorflow as tf
+from models import VGG16, I2V
 import tensorflow.contrib.rnn as rnns
 import tensorflow.contrib.layers as layers
 
@@ -98,6 +99,7 @@ class MathFormulaRecognizer():
 								initializer=tf.zeros_initializer())
 
 			self.w_B2f_filter = tf.get_variable("w_B2f_filter", shape=[11, 11,1,self.coverage_depth],initializer=layers.xavier_initializer())
+			self.b_B2f = tf.get_variable("b_B2f", shape=[self.coverage_depth],initializer=tf.zeros_initializer())
 
 			self.w_2logit = tf.get_variable('w_2logit', shape=[self.dim_hidden,self.num_label],
 								initializer=tf.contrib.layers.xavier_initializer())
@@ -120,8 +122,8 @@ class MathFormulaRecognizer():
 		total_loss = tf.constant(0.0,dtype = tf.float32)
 		with tf.variable_scope('Decoder'):
 			
-			beta_t = beta_t + alpha_t
 			F = tf.nn.conv2d(tf.reshape(beta_t,[-1,self.feature_height,self.feature_width,1]),self.w_B2f_filter,strides = [1,1,1,1],padding = 'SAME')
+			F = tf.nn.bias_add(F, self.b_B2f)
 			F = tf.multiply(F,self.sx_mask)
 			out = state
 			#weighted x has shape [batchsize* feature size, attention dimension]
@@ -146,6 +148,7 @@ class MathFormulaRecognizer():
 			alpha_t = tf.exp(e)
 			alpha_t = tf.multiply(alpha_t,self.vec_mask)
 			alpha_t = alpha_t/tf.expand_dims(tf.reduce_sum(alpha_t,axis = -1),1)
+			beta_t = beta_t + alpha_t
 			# alpha_t = tf.nn.softmax(e)
 			# print('alpha_t',alpha_t.get_shape())
 			c = tf.reduce_sum(tf.multiply(tf.transpose(tf.reshape(self.information_tensor,[-1,self.feature_size,self.latent_depth]),[2,0,1]),alpha_t),axis = -1)
@@ -175,15 +178,17 @@ class MathFormulaRecognizer():
 			tf.get_variable_scope().reuse_variables()	
 
 			def body(total_loss,i,beta_t,state,alpha_t,out):
-				beta_t = beta_t + alpha_t
 				F = tf.nn.conv2d(tf.reshape(beta_t,[-1,self.feature_height,self.feature_width,1]),self.w_B2f_filter,strides = [1,1,1,1],padding = 'SAME')
-				
+				F = tf.nn.bias_add(F, self.b_B2f)
+				F = tf.multiply(F,self.sx_mask)
+
 				#weighted x has shape [batchsize* feature size, attention dimension]
 				weighted_h = tf.matmul(out, self.w_hidden) + self.bias_hidden
 				weighted_h = tf.tile(weighted_h,[1,self.feature_size])
 				weighted_h = tf.reshape(weighted_h,[-1,self.attention_dimension])
 				# print('weighted_h',weighted_h.get_shape())
 	 			weighted_annotation =  tf.matmul(tf.reshape(self.information_tensor,[-1,self.latent_depth]),self.w_annotation) + self.bias_annotation
+
 	 			# print('weighted_annotation',weighted_annotation.get_shape())
 				weighted_f =   tf.matmul(tf.reshape(F,[-1,self.coverage_depth]),self.w_f) + self.bias_f
 				# print('weighted_f',weighted_f.get_shape())
@@ -195,6 +200,7 @@ class MathFormulaRecognizer():
 				alpha_t = tf.multiply(alpha_t,self.vec_mask)
 				alpha_t = alpha_t/tf.expand_dims(tf.reduce_sum(alpha_t,axis = -1),1)
 				# print('alpha_t',alpha_t.get_shape())
+				beta_t = beta_t + alpha_t
 
 				# expanded_alpha_t  = tf.tile(tf.expand_dims(alpha_t,2),[1,1,self.latent_depth])
 				# print('expanded_alpha_t',expanded_alpha_t.get_shape())
@@ -239,12 +245,14 @@ class MathFormulaRecognizer():
 		previous_word = tf.tile(tf.constant([111,]),[self.batch_size])
 		words = []
 		alphas = []
+		betas = []
 		with tf.variable_scope('Decoder'):
 			for i in range(0,max_len):
 
-				beta_t = beta_t + alpha_t
 				F = tf.nn.conv2d(tf.reshape(beta_t,[-1,self.feature_height,self.feature_width,1]),self.w_B2f_filter,strides = [1,1,1,1],padding = 'SAME')
-				
+				F = tf.nn.bias_add(F, self.b_B2f)
+				F = tf.multiply(F,self.sx_mask)
+
 				#weighted x has shape [batchsize* feature size, attention dimension]
 				weighted_h = tf.matmul(out, self.w_hidden) + self.bias_hidden
 				weighted_h = tf.tile(weighted_h,[1,self.feature_size])
@@ -261,6 +269,7 @@ class MathFormulaRecognizer():
 				alpha_t = tf.multiply(alpha_t,self.vec_mask)
 				alpha_t = alpha_t/tf.expand_dims(tf.reduce_sum(alpha_t,axis = -1),1)
 				# expanded_alpha_t  = tf.tile(tf.expand_dims(alpha_t,2),[1,1,self.latent_depth])
+				beta_t = beta_t + alpha_t
 
 				c = tf.reduce_sum(tf.multiply(tf.transpose(tf.reshape(self.information_tensor,[-1,self.feature_size,self.latent_depth]),[2,0,1]),alpha_t),axis = -1)
 				c = tf.transpose(c,[1,0])
@@ -278,7 +287,8 @@ class MathFormulaRecognizer():
 				previous_word = tf.argmax(logit,1)
 				words.append(previous_word)
 				alphas.append(alpha_t)
-		return words,alphas
+				betas.append(beta_t)
+		return words,alphas,betas
 
 	def build_eval(self):
 		self.in_alpha_t = tf.ones([self.batch_size,self.feature_size],dtype = tf.float32)/ tf.cast(self.feature_size,tf.float32)
@@ -296,9 +306,10 @@ class MathFormulaRecognizer():
 		previous_word = self.in_previous_word
 
 		with tf.variable_scope('Decoder'):
-			beta_t = beta_t + alpha_t
 			F = tf.nn.conv2d(tf.reshape(beta_t,[-1,self.feature_height,self.feature_width,1]),self.w_B2f_filter,strides = [1,1,1,1],padding = 'SAME')
-			
+			F = tf.nn.bias_add(F, self.b_B2f)
+			F = tf.multiply(F,self.sx_mask)
+
 			#weighted x has shape [batchsize* feature size, attention dimension]
 			weighted_h = tf.matmul(out, self.w_hidden) + self.bias_hidden
 			weighted_h = tf.tile(weighted_h,[1,self.feature_size])
@@ -315,6 +326,7 @@ class MathFormulaRecognizer():
 			alpha_t = tf.multiply(alpha_t,self.vec_mask)
 			alpha_t = alpha_t/tf.expand_dims(tf.reduce_sum(alpha_t,axis = -1),1)
 			# expanded_alpha_t  = tf.tile(tf.expand_dims(alpha_t,2),[1,1,self.latent_depth])
+			beta_t = beta_t + alpha_t
 
 			c = tf.reduce_sum(tf.multiply(tf.transpose(tf.reshape(self.information_tensor,[-1,self.feature_size,self.latent_depth]),[2,0,1]),alpha_t),axis = -1)
 			c = tf.transpose(c,[1,0])

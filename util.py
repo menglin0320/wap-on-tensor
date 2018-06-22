@@ -11,7 +11,7 @@ def load_dict(dictFile):
         w=l.strip().split()
         lexicon[w[0]]=int(w[1])
 
-    print 'total words/phones',len(lexicon)
+    print ('total words/phones',len(lexicon))
     return lexicon
 
 def prepare_data( images_x, seqs_y, n_words_src=30000,

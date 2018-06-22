@@ -1,7 +1,8 @@
-import numpy as np
-
-import cPickle as pkl
+import _pickle as pkl
 import gzip
+import sys
+
+import numpy as np
 
 
 def fopen(filename, mode='r'):
@@ -9,81 +10,79 @@ def fopen(filename, mode='r'):
         return gzip.open(filename, mode)
     return open(filename, mode)
 
-def dataIterator(feature_file,label_file,dictionary,batch_size,batch_Imagesize,maxlen,maxImagesize):
-    
-    fp=open(feature_file,'rb')
-    features=pkl.load(fp)
+
+def dataIterator(feature_file, label_file, dictionary, batch_size, batch_Imagesize, maxlen, maxImagesize):
+    fp = open(feature_file, 'rb')
+    features = pkl.load(fp, encoding='latin1')
     fp.close()
 
-    fp2=open(label_file,'r')
-    labels=fp2.readlines()
+    fp2 = open(label_file, 'r')
+    labels = fp2.readlines()
     fp2.close()
 
-    targets={}
+    targets = {}
     # map word to int with dictionary
     for l in labels:
-        tmp=l.strip().split()
-        uid=tmp[0]
-        w_list=[]
+        tmp = l.strip().split()
+        uid = tmp[0]
+        w_list = []
         for w in tmp[1:]:
-            if dictionary.has_key(w):
+            if w in dictionary:
                 w_list.append(dictionary[w])
             else:
-                print 'a word not in the dictionary !! sentence ',uid,'word ', w
+                print(('a word not in the dictionary !! sentence ', uid, 'word ', w))
                 sys.exit()
-        targets[uid]=w_list
+        targets[uid] = w_list
 
+    imageSize = {}
+    for uid, fea in list(features.items()):
+        imageSize[uid] = fea.shape[1] * fea.shape[2]
 
+    imageSize = sorted(list(imageSize.items()),
+                       key=lambda d: d[1])  # sorted by sentence length,  return a list with each triple element
 
-    imageSize={}
-    for uid,fea in features.iteritems():
-        imageSize[uid]=fea.shape[1]*fea.shape[2]
+    feature_batch = []
+    label_batch = []
+    feature_total = []
+    label_total = []
+    uidList = []
 
-    imageSize= sorted(imageSize.iteritems(), key=lambda d:d[1]) # sorted by sentence length,  return a list with each triple element
-
-
-    feature_batch=[]
-    label_batch=[]
-    feature_total=[]
-    label_total=[]
-    uidList=[]
-
-    batch_image_size=0
-    biggest_image_size=0
-    i=0
-    for uid,size in imageSize:
-        if size>biggest_image_size:
-            biggest_image_size=size
-        fea=features[uid]
-        lab=targets[uid]
-        batch_image_size=biggest_image_size*(i+1)
-        if len(lab)>maxlen:
-            print 'sentence', uid, 'length bigger than', maxlen, 'ignore'
-        elif size>maxImagesize:
-            print 'image', uid, 'size bigger than', maxImagesize, 'ignore'
+    batch_image_size = 0
+    biggest_image_size = 0
+    i = 0
+    for uid, size in imageSize:
+        if size > biggest_image_size:
+            biggest_image_size = size
+        fea = features[uid]
+        lab = targets[uid]
+        batch_image_size = biggest_image_size * (i + 1)
+        if len(lab) > maxlen:
+            print('sentence', uid, 'length bigger than', maxlen, 'ignore')
+        elif size > maxImagesize:
+            print('image', uid, 'size bigger than', maxImagesize, 'ignore')
         else:
             uidList.append(uid)
-            if batch_image_size>batch_Imagesize or i==batch_size: # a batch is full
+            if batch_image_size > batch_Imagesize or i == batch_size:  # a batch is full
                 feature_total.append(feature_batch)
                 label_total.append(label_batch)
 
-                i=0
-                biggest_image_size=size
-                feature_batch=[]
-                label_batch=[]
+                i = 0
+                biggest_image_size = size
+                feature_batch = []
+                label_batch = []
                 feature_batch.append(np.asarray(fea))
                 label_batch.append(np.asarray(lab))
-                batch_image_size=biggest_image_size*(i+1)
-                i+=1
+                batch_image_size = biggest_image_size * (i + 1)
+                i += 1
             else:
                 feature_batch.append(np.asarray(fea))
                 label_batch.append(np.asarray(lab))
-                i+=1
+                i += 1
 
     # last batch
     feature_total.append(feature_batch)
     label_total.append(label_batch)
 
-    print 'total ',len(feature_total), 'batch data loaded'
+    print('total ', len(feature_total), 'batch data loaded')
 
-    return [np.dstack([feature_total,label_total]),np.asarray(uidList)]
+    return [np.dstack([feature_total, label_total]), np.asarray(uidList)]

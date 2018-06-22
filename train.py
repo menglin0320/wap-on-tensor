@@ -8,6 +8,8 @@ from data_iterator import dataIterator
 class train_code:
     def __init__(self):
         self.config_initialize()
+        self.initialize_model()
+        self.load_data()
 
     def config_initialize(self):
         self.home_path = os.getcwd()
@@ -30,7 +32,7 @@ class train_code:
 
     def initialize_model(self):
         checkpoint_dir = self.checkpoint_dir
-        self.model = MathFormulaRecognizer(num_label=112, dim_hidden=128, device='/device:GPU:0')
+        self.model = MathFormulaRecognizer(num_label=112, dim_hidden=128)
         self.loss, self.opt = self.model.build_train()
         self.saver = tf.train.Saver(max_to_keep=10)
         self.sess = tf.Session()
@@ -54,7 +56,7 @@ class train_code:
         worddicts = load_dict(dictionaries[0])
         worddicts_r = [None] * len(worddicts)
 
-        for kk, vv in worddicts.iteritems():
+        for kk, vv in worddicts.items():
             worddicts_r[vv] = kk
 
         self.train, self.train_uid_list = dataIterator(datasets[0], datasets[1],
@@ -88,3 +90,7 @@ class train_code:
                     print(j, avg_loss)
                     count = 0
                     avg_loss = 0
+
+if __name__ == "__main__":
+    train = train_code()
+    train.run()

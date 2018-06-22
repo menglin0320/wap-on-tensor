@@ -19,7 +19,15 @@ def layer_stack(in_map, n_layers, n_channels, last=False, is_training=True):
 class MathFormulaRecognizer():
     def __init__(self, num_label, dim_hidden):
         # paprameters for the model
-        self.initialial_lr = 0.002
+        self.x = tf.placeholder(tf.float32, [None, None, None, 1])
+        self.x_mask = tf.placeholder(tf.float32, [None, None, None])
+        self.ex_mask = tf.expand_dims(self.x_mask, 3)
+
+        self.y = tf.placeholder(tf.int32, [None, None])
+        self.y_mask = tf.placeholder(tf.float32, [None, None])
+        self.seq_length = tf.shape(self.y)[1]
+
+        self.initial_lr = 0.002
         self.num_label = num_label
         self.dim_hidden = dim_hidden
         self.coverage_depth = 128
@@ -30,14 +38,6 @@ class MathFormulaRecognizer():
         self.in_width = tf.shape(self.x)[2]
         self.latent_depth = 128
         self.attention_dimension = self.latent_depth
-
-        self.x = tf.placeholder(tf.float32, [None, None, None, 1])
-        self.x_mask = tf.placeholder(tf.float32, [None, None, None])
-        self.ex_mask = tf.expand_dims(self.x_mask, 3)
-
-        self.y = tf.placeholder(tf.int32, [None, None])
-        self.y_mask = tf.placeholder(tf.float32, [None, None])
-        self.seq_length = tf.shape(self.y)[1]
 
         self.weight_initializer = tf.contrib.layers.xavier_initializer()
         self.bias_initializer = tf.constant_initializer(0.0)
@@ -50,13 +50,15 @@ class MathFormulaRecognizer():
     def project_features(self, features, name):
         with tf.variable_scope(name):
             if name == 'f':
-                w = self.w_f, b = self.bias_f
+                w = self.w_f
+                b = self.bias_f
                 in_depth = self.coverage_depth
-            elif name == 'feature':
-                w = self.w_annotation, b = self.bias_annotation
+            else:
+                w = self.w_annotation
+                b = self.bias_annotation
                 in_depth = self.latent_depth
             features_flat = tf.reshape(features, [-1, in_depth])
-            features_proj = tf.matmul(features_flat, w)
+            features_proj = tf.matmul(features_flat, w) + b
             features_proj = tf.reshape(features_proj, [-1, self.feature_size, self.attention_dimension])
             return features_proj
 
@@ -135,7 +137,7 @@ class MathFormulaRecognizer():
                                                initializer=self.bias_initializer)
 
             self.w_embedding = tf.get_variable('w_embedding', shape=[self.num_label, self.dim_embed],
-                                               initalizer=self.emb_initializer)
+                                               initializer=self.emb_initializer)
 
             self.bias_embedding = tf.get_variable("bias_embedding", shape=[self.dim_embed],
                                                   initializer=self.bias_initializer)
@@ -151,8 +153,8 @@ class MathFormulaRecognizer():
         out = state
         weighted_h = tf.matmul(out, self.w_hidden) + self.bias_hidden
 
-        weighted_annotation = self.project_features(F, 'feature')
-        weighted_f = self.project_features(self.F, 'F')
+        weighted_annotation = self.project_features(self.information_tensor, 'feature')
+        weighted_f = self.project_features(F, 'F')
         SUM = tf.add(tf.add(tf.expand_dims(weighted_h, 1), weighted_annotation),
                      weighted_f)  # (batch_size,feature_size,attention_dimension)
         e = tf.matmul(tf.nn.tanh(tf.reshape(SUM, [-1, self.attention_dimension])),
@@ -197,7 +199,7 @@ class MathFormulaRecognizer():
         weighted_h = tf.matmul(out, self.w_hidden) + self.bias_hidden
 
         weighted_annotation = self.project_features(F, 'feature')
-        weighted_f = self.project_features(self.F, 'F')
+        weighted_f = self.project_features(self.F, 'f')
         SUM = tf.add(tf.add(tf.expand_dims(weighted_h, 1), weighted_annotation),
                      weighted_f)  # (batch_size,feature_size,attention_dimension)
         e = tf.matmul(tf.nn.tanh(tf.reshape(SUM, [-1, self.attention_dimension])),
@@ -230,9 +232,9 @@ class MathFormulaRecognizer():
             loss, beta_t, out = self.decoding_one_word_train(beta_t, state, start_vec, 0)
             total_loss += loss
             # first_round
-            i = tf.constant(1)
-            while_condition = lambda N1, i, N2, N3, N4: tf.less(i, self.seq_length)
             tf.get_variable_scope().reuse_variables()
+            i = tf.constant(1)
+            while_condition = lambda N1, i, N2, N3: tf.less(i, self.seq_length)
 
             # keep alpha_t for debugging, may get rid of it later.
             # Notice that for gru state = out
@@ -246,7 +248,7 @@ class MathFormulaRecognizer():
                                                          [total_loss, i, beta_t, out])
             total_loss = total_loss / tf.reduce_sum(self.y_mask)
 
-        self.lr = tf.train.exponential_decay(self.initial_lr,self.counter_dis, 1500, 0.96, staircase = true)
+        self.lr = tf.train.exponential_decay(self.initial_lr, self.counter_dis, 1500, 0.96, staircase = True)
         opt = layers.optimize_loss(loss=total_loss, learning_rate=self.lr,
                                    optimizer=tf.train.AdadeltaOptimizer,
                                    clip_gradients=100., global_step=self.counter_dis)
@@ -281,7 +283,6 @@ class MathFormulaRecognizer():
 
         # c = tf.matmul(self.mean_feature,self.w_init2c) + self.bias_init2c
         self.in_state = tf.matmul(self.mean_feature, self.w_init2hid) + self.bias_init2hid
-        out = self.in_state
         state = self.in_state
 
         self.in_previous_word = tf.tile(tf.constant([111, ]), [self.batch_size])

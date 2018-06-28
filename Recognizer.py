@@ -27,7 +27,7 @@ class MathFormulaRecognizer():
         self.y_mask = tf.placeholder(tf.float32, [None, None])
         self.seq_length = tf.shape(self.y)[1]
 
-        self.initial_lr = 0.002
+        self.initial_lr = 0.2
         self.num_label = num_label
         self.dim_hidden = dim_hidden
         self.coverage_depth = 128

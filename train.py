@@ -82,7 +82,7 @@ class train_code:
                 y = np.transpose(y)
                 y_mask = np.transpose(y_mask)
                 _, Loss = sess.run([self.opt, self.loss], feed_dict={model.x: x, model.x_mask: x_mask, model.y: y, \
-                                                           model.y_mask: y_mask, model.is_train: True, model.lr: 0.2})
+                                                           model.y_mask: y_mask, model.is_train: True})
                 avg_loss = avg_loss + Loss
                 count = count + 1
                 if (not (j % 100)):

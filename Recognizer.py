@@ -257,8 +257,8 @@ class MathFormulaRecognizer():
             [total_correct, total_loss, i, beta_t, out] = tf.while_loop(while_condition, body,
                                                          [total_correct, total_loss, i, beta_t, out])
             total_loss = total_loss / tf.reduce_sum(self.y_mask)
-            self.total_correct = total_correct
-            self.valid_digits = tf.reduce_sum(self.y_mask)
+            # self.total_correct = total_correct
+            # self.valid_digits = tf.reduce_sum(self.y_mask)
             accuracy = total_correct / tf.reduce_sum(self.y_mask)
         self.lr = tf.train.exponential_decay(self.initial_lr, self.counter_dis, 1500, 0.96, staircase = True)
         opt = layers.optimize_loss(loss=total_loss, learning_rate=self.lr,

@@ -185,8 +185,11 @@ class MathFormulaRecognizer():
         # make those self just make it easier to debug
         xentropy = tf.nn.softmax_cross_entropy_with_logits(logits=logit, labels=onehot)
         predict = tf.cast(tf.argmax(logit, axis=1), tf.int32)
-        correct_prediction = tf.equal(predict, labels)
+        # print(predict.get_shape())
+        correct_prediction = tf.equal(predict, self.y[:, i])
+        # print(correct_prediction.get_shape())
         correct_prediction = tf.cast(correct_prediction, tf.float32) * self.y_mask[:, i]
+        correct_prediction = correct_prediction
         correct = tf.reduce_sum(correct_prediction)
         xentropy = xentropy * self.y_mask[:, i]
 

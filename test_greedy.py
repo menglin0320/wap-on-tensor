@@ -90,7 +90,7 @@ class test_code:
         Words, Alphas, height, width, Beta = sess.run(
             [self.logits, self.alpha_t, model.feature_height, model.feature_width, self.beta_t],
             feed_dict={model.x: x, model.x_mask: x_mask,
-                       model.is_train: False})
+                       model.is_train: True})
 
         Words = [w[0] for w in Words]
         for c in Words:

@@ -155,6 +155,8 @@ class test_code:
                     latex_array = cur_beam[j][3]
                     finish_flag = True
                     break
+        for c in latex_array:
+            print (self.worddicts_r[c])
         return latex_array, np.squeeze(x[0])
 
 if __name__ == "__main__":

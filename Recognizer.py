@@ -45,7 +45,7 @@ class MathFormulaRecognizer():
         self.start_token = 111
         self.construct_encoder()
         self.set_Decoder_parameter()
-        self.build_train()
+        # self.build_train()
 
     def project_features(self, features, name):
         with tf.variable_scope(name):

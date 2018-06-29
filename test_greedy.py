@@ -80,7 +80,7 @@ class test_code:
         train = np.squeeze(train)
         sess = self.sess
         model = self.model
-        x, x_mask, y, y_mask = prepare_data(valid[batch_picked, 0], valid[batch_picked, 1])
+        x, x_mask, y, y_mask = prepare_data(train[batch_picked, 0], train[batch_picked, 1])
         # for simplicity only test first image on the batch
         x = x[0:1, :, :, :]
         x_mask = x_mask[0:1, :, :]
@@ -100,6 +100,6 @@ class test_code:
 
 if __name__ == "__main__":
     test_obj = test_code()
-    latex_ret, im = test_obj.run(4)
+    latex_ret, im = test_obj.run(1000)
     cv2.imwrite('test_out.png', im * 255)
     print(latex_ret)

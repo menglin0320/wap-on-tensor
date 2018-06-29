@@ -9,8 +9,6 @@ import cv2
 def softmax(x):
     return np.exp(x) / np.sum(np.exp(x), axis=0)
 
-def show_image(im):
-    plt.imshow(np.squeeze(im), cmap='gray')
 
 #TODO save and check attention
 class test_code:
@@ -53,6 +51,7 @@ class test_code:
 
     def load_model(self):
         self.model = MathFormulaRecognizer(num_label=112, dim_hidden=128)
+        self.alpha_t, self.beta_t, self.state, self.logit = self.model.build_eval()
         saver = tf.train.Saver(max_to_keep=10)
         self.sess = tf.Session()
         saved_path = tf.train.latest_checkpoint(self.checkpoint_path)
@@ -75,7 +74,6 @@ class test_code:
     def run(self, batch_picked):
         #This code assumes that at least one character in the list
         #is recognized
-        alpha_t, beta_t, state, logit = self.model.build_eval()
         train, train_uid_list = self.get_data('train')
         valid, valid_uid_list = self.get_data('test')
         valid = np.squeeze(valid)
@@ -91,7 +89,7 @@ class test_code:
 
         # on first iteration just pick the top n_cand candidates
         Alpha, Beta, State, Logit, information_tensor, vec_mask = sess.run(
-            [alpha_t, beta_t, state, logit, model.information_tensor, model.vec_mask],
+            [self.alpha_t, self.beta_t, self.state, self.logit, model.information_tensor, model.vec_mask],
             feed_dict={model.x: x, model.x_mask: x_mask, model.is_train: False})
         orders = np.argsort(Logit[0])[::-1]
         probs = softmax(Logit[0])
@@ -103,7 +101,7 @@ class test_code:
         for i in range(0, 5):
             previous_word = np.expand_dims(np.asarray(result[i][0]), 0)
 
-            tAlpha, tBeta, tState, tLogit = sess.run([alpha_t, beta_t, state, logit], feed_dict=
+            tAlpha, tBeta, tState, tLogit = sess.run([self.alpha_t, self.beta_t, self.state, self.logit], feed_dict=
             {model.information_tensor: information_tensor, model.vec_mask: vec_mask,
              model.in_beta_t: Beta, model.in_state: State,
              model.in_previous_word: previous_word, model.is_train: False})
@@ -137,7 +135,7 @@ class test_code:
                 Alpha = cur_beam[i][0]
                 Beta = cur_beam[i][1]
                 State = cur_beam[i][2]
-                tAlpha, tBeta, tState, tLogit = sess.run([alpha_t, beta_t, state, logit], feed_dict=
+                tAlpha, tBeta, tState, tLogit = sess.run([self.alpha_t, self.beta_t, self.state, self.logit], feed_dict=
                 {model.information_tensor: information_tensor, model.vec_mask: vec_mask,
                  model.in_beta_t: Beta, model.in_state: State,
                  model.in_previous_word: previous_word, model.is_train: False})

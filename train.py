@@ -18,7 +18,6 @@ class train_code:
         self.max_iters = 100000
         self.batch_size = 16
         self.valid_batch_size = 8
-        self.finetune_encoder_after = -1
         # Evaluation Checkpoint
         self.nEvaImages = 300
         self.EvaEach = 2500

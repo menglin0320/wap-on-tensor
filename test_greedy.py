@@ -95,6 +95,10 @@ class test_code:
         Words = [w[0] for w in Words]
         for c in Words:
             print(self.worddicts_r[c])
+        for i in range(0,10):
+            im = np.reshape(Alphas[i],(height,width))
+            norm_image = cv2.normalize(im, alpha=0, beta=1, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_32F)
+            cv2.imwrite('attention' + str(i) + '.png', norm_image)
         return Words, np.squeeze(x[0])
 
 

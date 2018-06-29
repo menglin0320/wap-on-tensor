@@ -184,10 +184,14 @@ class MathFormulaRecognizer():
         logit = tf.matmul(out, self.w_2logit) + self.bias_2logit
         # make those self just make it easier to debug
         xentropy = tf.nn.softmax_cross_entropy_with_logits(logits=logit, labels=onehot)
+        predict = tf.cast(tf.argmax(logit, axis=1), tf.int32)
+        correct_prediction = tf.equal(predict, labels)
+        correct_prediction = tf.cast(correct_prediction, tf.float32) * self.y_mask[:, i]
+        correct = tf.reduce_sum(correct_prediction)
         xentropy = xentropy * self.y_mask[:, i]
 
         loss = tf.reduce_sum(xentropy)
-        return loss, beta_t, out
+        return correct, loss, beta_t, out
 
     def decoding_one_word_validate(self, beta_t, state, previous_vec):
         F = tf.nn.conv2d(tf.reshape(beta_t, [-1, self.feature_height, self.feature_width, 1]), self.w_B2f_filter,
@@ -227,33 +231,36 @@ class MathFormulaRecognizer():
         beta_t = tf.zeros([self.batch_size, self.feature_size], dtype=tf.float32)
         state = tf.matmul(self.mean_feature, self.w_init2hid) + self.bias_init2hid
         total_loss = tf.constant(0.0, dtype=tf.float32)
+        total_correct = tf.constant(0.0, dtype=tf.float32)
         with tf.variable_scope('Decoder'):
             start_vec = tf.tile(tf.constant([self.start_token, ]), [self.batch_size])
-            loss, beta_t, out = self.decoding_one_word_train(beta_t, state, start_vec, 0)
+            cur_correct, loss, beta_t, out = self.decoding_one_word_train(beta_t, state, start_vec, 0)
             total_loss += loss
+            total_correct += cur_correct
             # first_round
             tf.get_variable_scope().reuse_variables()
             i = tf.constant(1)
-            while_condition = lambda N1, i, N2, N3: tf.less(i, self.seq_length)
+            while_condition = lambda N1, N2, i, N3, N4: tf.less(i, self.seq_length)
 
             # keep alpha_t for debugging, may get rid of it later.
             # Notice that for gru state = out
-            def body(total_loss, i, beta_t, state):
-                loss, beta_t, out = self.decoding_one_word_train(beta_t, state, self.y[:, i - 1], i)
+            def body(total_correct, total_loss , i, beta_t, state):
+                cur_correct, loss, beta_t, out = self.decoding_one_word_train(beta_t, state, self.y[:, i - 1], i)
                 total_loss += loss
-                return [total_loss, tf.add(i, 1), beta_t, out]
+                total_correct += cur_correct
+                return [total_correct, total_loss, tf.add(i, 1), beta_t, out]
 
             # do the loop:
-            [total_loss, i, beta_t, out] = tf.while_loop(while_condition, body,
-                                                         [total_loss, i, beta_t, out])
+            [total_correct, total_loss, i, beta_t, out] = tf.while_loop(while_condition, body,
+                                                         [total_correct, total_loss, i, beta_t, out])
             total_loss = total_loss / tf.reduce_sum(self.y_mask)
-
+            accuracy = total_correct / tf.reduce_sum(self.y_mask)
         self.lr = tf.train.exponential_decay(self.initial_lr, self.counter_dis, 1500, 0.96, staircase = True)
         opt = layers.optimize_loss(loss=total_loss, learning_rate=self.lr,
                                    optimizer=tf.train.AdadeltaOptimizer,
                                    clip_gradients=100., global_step=self.counter_dis)
 
-        return total_loss, opt
+        return accuracy, total_loss, opt
 
     def build_greedy_eval(self, max_len=100):
         beta_t = tf.zeros([self.batch_size, self.feature_size], dtype=tf.float32)

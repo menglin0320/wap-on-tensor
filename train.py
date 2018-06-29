@@ -32,7 +32,7 @@ class train_code:
     def initialize_model(self):
         checkpoint_dir = self.checkpoint_dir
         self.model = MathFormulaRecognizer(num_label=112, dim_hidden=128)
-        self.loss, self.opt = self.model.build_train()
+        self.acc, self.loss, self.opt = self.model.build_train()
         self.saver = tf.train.Saver(max_to_keep=10)
         self.sess = tf.Session()
         saved_path = tf.train.latest_checkpoint(checkpoint_dir)
@@ -74,21 +74,26 @@ class train_code:
             np.random.shuffle(rand_permute)
             saver.save(sess, self.checkpoint_path, global_step=i * rand_permute.shape[0])
             avg_loss = 0
+            avg_acc = 0
             count = 0
             print('epoch: ', i)
             for j in range(0, rand_permute.shape[0]):
                 x, x_mask, y, y_mask = prepare_data(train[rand_permute[j], 0], train[rand_permute[j], 1])
                 y = np.transpose(y)
                 y_mask = np.transpose(y_mask)
-                _, Loss = sess.run([self.opt, self.loss], feed_dict={model.x: x, model.x_mask: x_mask, model.y: y, \
+                _, Loss, Acc = sess.run([self.opt, self.loss, self.acc], feed_dict={model.x: x, model.x_mask: x_mask, model.y: y, \
                                                            model.y_mask: y_mask, model.is_train: True})
                 avg_loss = avg_loss + Loss
+                avg_acc = avg_acc + Acc
                 count = count + 1
                 if (not (j % 100)):
                     avg_loss = avg_loss / count
+                    avg_acc = avg_acc/count
+                    print(j, avg_acc)
                     print(j, avg_loss)
                     count = 0
                     avg_loss = 0
+                    avg_acc = 0
 
 if __name__ == "__main__":
     train = train_code()

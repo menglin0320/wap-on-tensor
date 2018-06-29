@@ -98,8 +98,9 @@ class test_code:
         return Words, np.squeeze(x[0])
 
 
+
 if __name__ == "__main__":
     test_obj = test_code()
-    latex_ret, im = test_obj.run(50)
+    latex_ret, im = test_obj.run(10)
     cv2.imwrite('test_out.png', im * 255)
     print(latex_ret)

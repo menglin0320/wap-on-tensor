@@ -92,7 +92,7 @@ class test_code:
             feed_dict={model.x: x, model.x_mask: x_mask,
                        model.is_train: False})
 
-        for c in Words:
+        for c in Words[0]:
             print(self.worddicts_r[c])
         return Words, np.squeeze(x[0])
 

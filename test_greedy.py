@@ -99,6 +99,7 @@ class test_code:
             im = np.reshape(Alphas[i],(height,width,1))
             norm_image = np.zeros((height,width))
             norm_image = cv2.normalize(im, norm_image, alpha=0, beta=1, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_32F)
+            print(norm_image)
             cv2.imwrite('attention' + str(i) + '.png', norm_image*255)
         return Words, np.squeeze(x[0])
 

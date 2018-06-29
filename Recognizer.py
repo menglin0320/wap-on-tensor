@@ -273,7 +273,7 @@ class MathFormulaRecognizer():
         # c = tf.matmul(self.mean_feature,self.w_init2c) + self.bias_init2c
         state = tf.matmul(self.mean_feature, self.w_init2hid) + self.bias_init2hid
         out = state
-        self.in_previous_word = tf.tile(tf.constant([111, ]), [self.batch_size])
+        self.in_previous_word = tf.tile(tf.constant([self.start_token, ]), [self.batch_size])
         previous_word = self.in_previous_word
         words = []
         alphas = []

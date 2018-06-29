@@ -27,7 +27,7 @@ class MathFormulaRecognizer():
         self.y_mask = tf.placeholder(tf.float32, [None, None])
         self.seq_length = tf.shape(self.y)[1]
 
-        self.initial_lr = 0.2
+        self.initial_lr = 2.
         self.num_label = num_label
         self.dim_hidden = dim_hidden
         self.coverage_depth = 128
@@ -64,16 +64,16 @@ class MathFormulaRecognizer():
 
     def construct_encoder(self):
         with tf.variable_scope('Encoder'):
-            first_stack = layer_stack(self.x, 3, 32, is_training=self.is_train)
+            first_stack = layer_stack(self.x, 4, 32, is_training=self.is_train)
             pooled = layers.max_pool2d(first_stack, 2, 2, padding='VALID')
 
-            second_stack = layer_stack(pooled, 3, 64, is_training=self.is_train)
+            second_stack = layer_stack(pooled, 4, 64, is_training=self.is_train)
             pooled = layers.max_pool2d(second_stack, 2, 2, padding='VALID')
 
-            third_stack = layer_stack(pooled, 3, 64, is_training=self.is_train)
+            third_stack = layer_stack(pooled, 4, 64, is_training=self.is_train)
             pooled = layers.max_pool2d(third_stack, 2, 2, padding='VALID')
 
-            fourth_stack = layer_stack(pooled, 3, 128, True, self.is_train)
+            fourth_stack = layer_stack(pooled, 4, 128, True, self.is_train)
             pooled = layers.max_pool2d(fourth_stack, 2, 2, padding='VALID')
 
             self.ex_mask = layers.max_pool2d(self.ex_mask, 2, 2, padding='VALID')

@@ -4,7 +4,7 @@ from Recognizer import MathFormulaRecognizer
 from data_iterator import dataIterator
 from util import *
 
-from matplotlib import plt
+import cv2
 
 def softmax(x):
     return np.exp(x) / np.sum(np.exp(x), axis=0)
@@ -48,11 +48,11 @@ class test_code:
 
         self.worddicts = load_dict(dictionaries[0])
         self.worddicts_r = [None] * len(self.worddicts)
-        for kk, vv in self.worddicts.iteritems():
+        for kk, vv in self.worddicts.items():
             self.worddicts_r[vv] = kk
 
     def load_model(self):
-        self.model = MathFormulaRecognizer(num_label=112, dim_hidden=128, device='/device:GPU:0')
+        self.model = MathFormulaRecognizer(num_label=112, dim_hidden=128)
         saver = tf.train.Saver(max_to_keep=10)
         self.sess = tf.Session()
         saved_path = tf.train.latest_checkpoint(self.checkpoint_path)
@@ -161,6 +161,6 @@ class test_code:
 
 if __name__ == "__main__":
     test_obj = test_code()
-    latex_ret,im = test_code.run(4)
-    show_image(im)
-
+    latex_ret,im = test_obj.run(4)
+    cv2.imwrite('test_out.png', im*255)
+    print(latex_ret)

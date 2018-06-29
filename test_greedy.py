@@ -88,7 +88,7 @@ class test_code:
         x = x[0:1, :, :, :]
         x_mask = x_mask[0:1, :, :]
         Words, Alphas, height, width, Beta = sess.run(
-            [self.logits, self.alphas, model.feature_height, model.feature_width, self.beta],
+            [self.logits, self.alpha_t, model.feature_height, model.feature_width, self.beta_t],
             feed_dict={model.x: x, model.x_mask: x_mask,
                        model.is_train: False})
 

@@ -51,7 +51,7 @@ class test_code:
 
     def load_model(self):
         self.model = MathFormulaRecognizer(num_label=112, dim_hidden=128)
-        self.logit, self.alpha_t, self.beta_t = self.model.build_greedy_eval()
+        self.logits, self.alpha_t, self.beta_t = self.model.build_greedy_eval()
         saver = tf.train.Saver(max_to_keep=10)
         self.sess = tf.Session()
         saved_path = tf.train.latest_checkpoint(self.checkpoint_path)

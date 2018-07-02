@@ -152,7 +152,8 @@ class MathFormulaRecognizer():
         # though it's okay to directly use state, in this way it is clearer.
         out = state
         weighted_h = tf.matmul(out, self.w_hidden) + self.bias_hidden
-
+        if i == 0:
+            self.first_pred = out
         weighted_annotation = self.project_features(self.information_tensor, 'feature')
         weighted_f = self.project_features(F, 'F')
         SUM = tf.add(tf.add(tf.expand_dims(weighted_h, 1), weighted_annotation),
@@ -185,8 +186,7 @@ class MathFormulaRecognizer():
         # make those self just make it easier to debug
         xentropy = tf.nn.softmax_cross_entropy_with_logits(logits=logit, labels=onehot)
         predict = tf.cast(tf.argmax(logit, axis=1), tf.int32)
-        if i == 0:
-            self.first_pred = out
+
         # print(predict.get_shape())
         correct_prediction = tf.equal(predict, self.y[:, i])
         # print(correct_prediction.get_shape())
@@ -206,7 +206,8 @@ class MathFormulaRecognizer():
         # though it's okay to directly use state as out, in this way it is clearer.
         out = state
         weighted_h = tf.matmul(out, self.w_hidden) + self.bias_hidden
-
+        if i == 0:
+            self.debug = out
         weighted_annotation = self.project_features(self.information_tensor, 'feature')
         weighted_f = self.project_features(F, 'f')
         SUM = tf.add(tf.add(tf.expand_dims(weighted_h, 1), weighted_annotation),
@@ -229,8 +230,7 @@ class MathFormulaRecognizer():
         gru_in = tf.concat([c, word_embedding], axis=1)
         out, state = self.gru(gru_in, state)
         logit = tf.matmul(out, self.w_2logit) + self.bias_2logit
-        if i == 0:
-            self.debug = out
+
         return beta_t, out, logit, alpha_t
 
     def build_train(self):

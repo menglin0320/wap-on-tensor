@@ -109,16 +109,17 @@ class test_code:
         str = ''.join(str_list)
         print(str)
 
-        attention_on_origin(np.reshape(Alphas[0], (height, width, 1)), np.squeeze(x[0]))
+        with_att = attention_on_origin(np.reshape(Alphas[0], (height, width, 1)), np.squeeze(x[0]))
         # print(debug)
             #cv2.imwrite('attention' + str(i) + '.png', norm_image*255)
         # self.writer.close()
-        return Words, np.squeeze(x[0])
+        return Words, np.squeeze(x[0]), with_att
 
 
 
 if __name__ == "__main__":
     test_obj = test_code()
-    latex_ret, im = test_obj.run(0)
+    latex_ret, im, with_att = test_obj.run(0)
     cv2.imwrite('test_out.png', im * 255)
+    cv2.imwrite('with_att.png', with_att * 255)
     print(latex_ret)

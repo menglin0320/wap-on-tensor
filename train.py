@@ -23,7 +23,7 @@ class train_code:
         self.EvaEach = 2500
         self.SummaryEach = 1000
         self.device = "/gpu:0"
-        self.batch_Imagesize = 250000
+        self.batch_Imagesize = 500000
         self.valid_batch_Imagesize = 500000
         self.maxImagesize = 500000
         self.maxlen = 200

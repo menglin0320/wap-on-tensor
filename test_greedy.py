@@ -53,9 +53,9 @@ class test_code:
         self.model = MathFormulaRecognizer(num_label=112, dim_hidden=128)
         self.logits, self.alpha_t, self.beta_t = self.model.build_greedy_eval()
         saver = tf.train.Saver(max_to_keep=10)
+        tf.reset_default_graph()
         self.sess = tf.Session()
         saved_path = tf.train.latest_checkpoint(self.checkpoint_path)
-        tf.reset_default_graph()
         saver.restore(self.sess, saved_path)
 
     def get_data(self, set_chosen):

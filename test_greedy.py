@@ -108,18 +108,21 @@ class test_code:
             str_list.append(self.worddicts_r[c])
         str = ''.join(str_list)
         print(str)
-
-        with_att = attention_on_origin(np.reshape(Alphas[0], (height, width, 1)), np.squeeze(x[0]))
+        with_atts = []
+        for i in range(0,10):
+            with_att = attention_on_origin(np.reshape(Alphas[i], (height, width, 1)), np.squeeze(x[0]))
+            with_atts.append(with_att)
         # print(debug)
             #cv2.imwrite('attention' + str(i) + '.png', norm_image*255)
         # self.writer.close()
-        return Words, np.squeeze(x[0]), with_att
+        return Words, np.squeeze(x[0]), with_atts
 
 
 
 if __name__ == "__main__":
     test_obj = test_code()
-    latex_ret, im, with_att = test_obj.run(0)
+    latex_ret, im, with_atts = test_obj.run(0)
     cv2.imwrite('test_out.png', im * 255)
-    cv2.imwrite('with_att.png', with_att * 255)
+    for i in range(0, 10):
+        cv2.imwrite('with_att' + i +'.png', with_atts[i] * 255)
     print(latex_ret)

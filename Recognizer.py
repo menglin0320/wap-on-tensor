@@ -186,7 +186,7 @@ class MathFormulaRecognizer():
         xentropy = tf.nn.softmax_cross_entropy_with_logits(logits=logit, labels=onehot)
         predict = tf.cast(tf.argmax(logit, axis=1), tf.int32)
         if i == 0:
-            self.first_pred = alpha_t
+            self.first_pred = logit
         # print(predict.get_shape())
         correct_prediction = tf.equal(predict, self.y[:, i])
         # print(correct_prediction.get_shape())
@@ -286,7 +286,7 @@ class MathFormulaRecognizer():
                 beta_t, out, logit, alpha_t = self.decoding_one_word_validate(beta_t, state, previous_word)
                 previous_word = tf.argmax(logit, 1)
                 state = out
-                words.append(previous_word)
+                words.append(logit)
                 alphas.append(alpha_t)
                 betas.append(beta_t)
         return words, alphas, betas

@@ -57,6 +57,7 @@ class test_code:
         saver = tf.train.Saver(max_to_keep=10)
         saved_path = tf.train.latest_checkpoint(self.checkpoint_path)
         saver.restore(self.sess, saved_path)
+        print('restored model from: ' + saved_path)
         # self.writer = tf.summary.FileWriter("./log", self.sess.graph)
 
     def get_data(self, set_chosen):
@@ -99,9 +100,9 @@ class test_code:
         for i in range(0,10):
             im = np.reshape(Alphas[i],(height,width,1))
             norm_image = np.zeros((height,width))
-            norm_image = cv2.normalize(im, norm_image, alpha=0, beta=1, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_32F)
-            print(norm_image)
-            cv2.imwrite('attention' + str(i) + '.png', norm_image*255)
+            #norm_image = cv2.normalize(im, norm_image, alpha=0, beta=1, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_32F)
+            #print(norm_image)
+            #cv2.imwrite('attention' + str(i) + '.png', norm_image*255)
         # self.writer.close()
         return Words, np.squeeze(x[0])
 

@@ -57,7 +57,7 @@ class test_code:
         tf.reset_default_graph()
         saved_path = tf.train.latest_checkpoint(self.checkpoint_path)
         saver.restore(self.sess, saved_path)
-        self.writer = tf.summary.FileWriter("/log", self.sess.graph)
+        self.writer = tf.summary.FileWriter("./log", self.sess.graph)
 
     def get_data(self, set_chosen):
         if set_chosen == 'train':

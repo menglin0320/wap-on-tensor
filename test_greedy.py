@@ -105,7 +105,7 @@ class test_code:
         for c in Words:
             if c == 0:
                 break
-            str_list.append(c)
+            str_list.append(self.worddicts_r[c])
         str = ''.join(str_list)
         print(str)
 

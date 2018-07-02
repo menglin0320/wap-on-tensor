@@ -186,7 +186,7 @@ class MathFormulaRecognizer():
         xentropy = tf.nn.softmax_cross_entropy_with_logits(logits=logit, labels=onehot)
         predict = tf.cast(tf.argmax(logit, axis=1), tf.int32)
         if i == 0:
-            self.first_pred = alpha_t
+            self.first_pred = c
         # print(predict.get_shape())
         correct_prediction = tf.equal(predict, self.y[:, i])
         # print(correct_prediction.get_shape())
@@ -198,7 +198,7 @@ class MathFormulaRecognizer():
         loss = tf.reduce_sum(xentropy)
         return correct, loss, beta_t, out
 
-    def decoding_one_word_validate(self, beta_t, state, previous_vec):
+    def decoding_one_word_validate(self, beta_t, state, previous_vec, i):
         F = tf.nn.conv2d(tf.reshape(beta_t, [-1, self.feature_height, self.feature_width, 1]), self.w_B2f_filter,
                          strides=[1, 1, 1, 1], padding='SAME')
         F = tf.nn.bias_add(F, self.b_B2f)
@@ -229,6 +229,8 @@ class MathFormulaRecognizer():
         gru_in = tf.concat([c, word_embedding], axis=1)
         out, state = self.gru(gru_in, state)
         logit = tf.matmul(out, self.w_2logit) + self.bias_2logit
+        if i == 0:
+            self.debug = c
         return beta_t, out, logit, alpha_t
 
     def build_train(self):
@@ -283,9 +285,7 @@ class MathFormulaRecognizer():
         with tf.variable_scope('Decoder'):
             for i in range(0, max_len):
                 # have alpha_t for debugging
-                beta_t, out, logit, alpha_t = self.decoding_one_word_validate(beta_t, state, previous_word)
-                if i == 0:
-                    self.debug = logit
+                beta_t, out, logit, alpha_t = self.decoding_one_word_validate(beta_t, state, previous_word,i)
                 words.append(previous_word)
                 previous_word = tf.argmax(logit, 1)
                 state = out
@@ -306,6 +306,6 @@ class MathFormulaRecognizer():
         previous_word = self.in_previous_word
 
         with tf.variable_scope('Decoder'):
-            beta_t, out, logit, alpha_t = self.decoding_one_word_validate(beta_t, state, previous_word)
+            beta_t, out, logit, alpha_t = self.decoding_one_word_validate(beta_t, state, previous_word,1)
             state = out
         return alpha_t, beta_t, state, logit

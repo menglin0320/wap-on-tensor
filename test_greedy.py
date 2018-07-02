@@ -51,12 +51,13 @@ class test_code:
 
     def load_model(self):
         self.model = MathFormulaRecognizer(num_label=112, dim_hidden=128)
-        self.logits, self.alpha_t, self.beta_t = self.model.build_greedy_eval()
         saver = tf.train.Saver(max_to_keep=10)
         self.sess = tf.Session()
         tf.reset_default_graph()
         saved_path = tf.train.latest_checkpoint(self.checkpoint_path)
         saver.restore(self.sess, saved_path)
+        self.logits, self.alpha_t, self.beta_t = self.model.build_greedy_eval()
+
         # self.writer = tf.summary.FileWriter("./log", self.sess.graph)
 
     def get_data(self, set_chosen):

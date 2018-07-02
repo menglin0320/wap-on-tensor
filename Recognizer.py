@@ -270,7 +270,7 @@ class MathFormulaRecognizer():
 
         return accuracy, total_loss, opt
 
-    def build_greedy_eval(self, max_len=2):
+    def build_greedy_eval(self, max_len=50):
         beta_t = tf.zeros([self.batch_size, self.feature_size], dtype=tf.float32)
 
         # c = tf.matmul(self.mean_feature,self.w_init2c) + self.bias_init2c

@@ -5,6 +5,12 @@ from Recognizer import MathFormulaRecognizer
 from data_iterator import dataIterator
 from util import *
 
+def attention_on_origin(attention, im):
+    height, width = im.shape
+    aug_attention = cv2.resize(attention, (height, width))
+    ret = np.zeros((height, width))
+    ret = cv2.normalize(im+aug_attention, ret, alpha=0, beta=1, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_32F)
+    return ret
 
 def softmax(x):
     return np.exp(x) / np.sum(np.exp(x), axis=0)
@@ -94,14 +100,16 @@ class test_code:
                        model.is_train: False})
 
         Words = [w[0] for w in Words]
+        str_list = []
         self.worddicts_r.append('sof')
         for c in Words:
-            print(self.worddicts_r[c])
-        
-        im = np.reshape(Alphas[0],(height,width,1))
-            #norm_image = np.zeros((height,width))
-            #norm_image = cv2.normalize(im, norm_image, alpha=0, beta=1, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_32F)
-        print(im)
+            if c == 0:
+                break
+            str_list.append(c)
+        str = ''.join(str_list)
+        print(str)
+
+        attention_on_origin(np.reshape(Alphas[0], (height, width, 1)), np.squeeze(x[0]))
         # print(debug)
             #cv2.imwrite('attention' + str(i) + '.png', norm_image*255)
         # self.writer.close()

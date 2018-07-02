@@ -31,14 +31,14 @@ class train_code:
 
     def initialize_model(self):
         checkpoint_dir = self.checkpoint_dir
+        self.sess = tf.Session()
         self.model = MathFormulaRecognizer(num_label=112, dim_hidden=128)
         self.acc, self.loss, self.opt = self.model.build_train()
         self.saver = tf.train.Saver(max_to_keep=10)
-        self.sess = tf.Session()
         saved_path = tf.train.latest_checkpoint(checkpoint_dir)
         self.start_step = 0
         if (saved_path):
-            tf.reset_default_graph()
+            # tf.reset_default_graph()
             self.saver.restore(self.sess, saved_path)
             ckpt = tf.train.get_checkpoint_state(checkpoint_dir)
             step = int(os.path.basename(ckpt.model_checkpoint_path).split('-')[1])

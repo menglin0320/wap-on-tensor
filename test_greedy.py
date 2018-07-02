@@ -89,8 +89,8 @@ class test_code:
 
         x = x[0:1, :, :, :]
         x_mask = x_mask[0:1, :, :]
-        Words, Alphas, height, width, Beta = sess.run(
-            [self.logits, self.alpha_t, model.feature_height, model.feature_width, self.beta_t],
+        Words, Alphas, height, width, Beta, debug = sess.run(
+            [self.logits, self.alpha_t, model.feature_height, model.feature_width, self.beta_t, model.debug],
             feed_dict={model.x: x, model.x_mask: x_mask,
                        model.is_train: True})
 
@@ -103,6 +103,7 @@ class test_code:
             #norm_image = np.zeros((height,width))
             #norm_image = cv2.normalize(im, norm_image, alpha=0, beta=1, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_32F)
         print(im)
+        print(debug)
             #cv2.imwrite('attention' + str(i) + '.png', norm_image*255)
         # self.writer.close()
         return Words, np.squeeze(x[0])

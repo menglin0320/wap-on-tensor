@@ -284,6 +284,8 @@ class MathFormulaRecognizer():
             for i in range(0, max_len):
                 # have alpha_t for debugging
                 beta_t, out, logit, alpha_t = self.decoding_one_word_validate(beta_t, state, previous_word)
+                if i == 0:
+                    self.debug = logit
                 words.append(previous_word)
                 previous_word = tf.argmax(logit, 1)
                 state = out

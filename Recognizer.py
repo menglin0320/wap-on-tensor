@@ -152,8 +152,7 @@ class MathFormulaRecognizer():
         # though it's okay to directly use state, in this way it is clearer.
         out = state
         weighted_h = tf.matmul(out, self.w_hidden) + self.bias_hidden
-        if i == 0:
-            self.first_pred = out
+
         weighted_annotation = self.project_features(self.information_tensor, 'feature')
         weighted_f = self.project_features(F, 'F')
         SUM = tf.add(tf.add(tf.expand_dims(weighted_h, 1), weighted_annotation),
@@ -206,8 +205,7 @@ class MathFormulaRecognizer():
         # though it's okay to directly use state as out, in this way it is clearer.
         out = state
         weighted_h = tf.matmul(out, self.w_hidden) + self.bias_hidden
-        if i == 0:
-            self.debug = out
+
         weighted_annotation = self.project_features(self.information_tensor, 'feature')
         weighted_f = self.project_features(F, 'f')
         SUM = tf.add(tf.add(tf.expand_dims(weighted_h, 1), weighted_annotation),
@@ -239,6 +237,7 @@ class MathFormulaRecognizer():
         state = tf.matmul(self.mean_feature, self.w_init2hid) + self.bias_init2hid
         total_loss = tf.constant(0.0, dtype=tf.float32)
         total_correct = tf.constant(0.0, dtype=tf.float32)
+        self.first_pred = state
         with tf.variable_scope('Decoder'):
             start_vec = tf.tile(tf.constant([self.start_token, ]), [self.batch_size])
             cur_correct, loss, beta_t, out = self.decoding_one_word_train(beta_t, state, start_vec, 0)
@@ -279,6 +278,7 @@ class MathFormulaRecognizer():
         out = state
         self.in_previous_word = tf.tile(tf.constant([self.start_token, ]), [self.batch_size])
         previous_word = self.in_previous_word
+        self.debug = out
         words = []
         alphas = []
         betas = []

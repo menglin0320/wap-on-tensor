@@ -86,7 +86,6 @@ class test_code:
         # for simplicity only test first image on the batch
         x = x[0:1, :, :, :]
         x_mask = x_mask[0:1, :, :]
-
         x = x[0:1, :, :, :]
         x_mask = x_mask[0:1, :, :]
         Words, Alphas, height, width, Beta, debug = sess.run(

@@ -81,7 +81,7 @@ class train_code:
                 x, x_mask, y, y_mask = prepare_data(train[rand_permute[j], 0], train[rand_permute[j], 1])
                 y = np.transpose(y)
                 y_mask = np.transpose(y_mask)
-                first_pred, _, Loss, Acc = sess.run([model.first_pred, self.opt, self.loss, self.acc], feed_dict={model.x: x, model.x_mask: x_mask, model.y: y, \
+                _, Loss, Acc = sess.run([self.opt, self.loss, self.acc], feed_dict={model.x: x, model.x_mask: x_mask, model.y: y, \
                                                            model.y_mask: y_mask, model.is_train: False})
                 avg_loss = avg_loss + Loss
                 avg_acc = avg_acc + Acc

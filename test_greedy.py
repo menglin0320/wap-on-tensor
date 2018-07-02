@@ -91,7 +91,7 @@ class test_code:
         Words, Alphas, height, width, Beta, debug = sess.run(
             [self.logits, self.alpha_t, model.feature_height, model.feature_width, self.beta_t, model.debug],
             feed_dict={model.x: x, model.x_mask: x_mask,
-                       model.is_train: True})
+                       model.is_train: False})
 
         Words = [w[0] for w in Words]
         self.worddicts_r.append('sof')

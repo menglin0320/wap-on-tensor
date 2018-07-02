@@ -71,7 +71,7 @@ class train_code:
         n_train_img = train.shape[0]
         for i in range(start_step // n_train_img, self.n_epoch):
             rand_permute = np.arange(n_train_img)
-            np.random.shuffle(rand_permute)
+            # np.random.shuffle(rand_permute)
             saver.save(sess, self.checkpoint_path, global_step=i * rand_permute.shape[0])
             avg_loss = 0
             avg_acc = 0

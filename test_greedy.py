@@ -53,10 +53,11 @@ class test_code:
         self.model = MathFormulaRecognizer(num_label=112, dim_hidden=128)
         self.logits, self.alpha_t, self.beta_t = self.model.build_greedy_eval()
         saver = tf.train.Saver(max_to_keep=10)
-        tf.reset_default_graph()
         self.sess = tf.Session()
+        tf.reset_default_graph()
         saved_path = tf.train.latest_checkpoint(self.checkpoint_path)
         saver.restore(self.sess, saved_path)
+        self.writer = tf.summary.FileWriter("/log", self.sess.graph)
 
     def get_data(self, set_chosen):
         if set_chosen == 'train':
@@ -101,6 +102,7 @@ class test_code:
             norm_image = cv2.normalize(im, norm_image, alpha=0, beta=1, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_32F)
             print(norm_image)
             cv2.imwrite('attention' + str(i) + '.png', norm_image*255)
+        self.writer.close()
         return Words, np.squeeze(x[0])
 
 

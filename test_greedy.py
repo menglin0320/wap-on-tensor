@@ -95,6 +95,7 @@ class test_code:
                        model.is_train: True})
 
         Words = [w[0] for w in Words]
+        self.worddicts_r.append('sof')
         for c in Words:
             print(self.worddicts_r[c])
         

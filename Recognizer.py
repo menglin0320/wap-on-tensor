@@ -8,7 +8,7 @@ def layer_stack(in_map, n_layers, n_channels, last=False, is_training=True):
     for i in range(0, n_layers):
         conv = tf.nn.relu(
             layers.batch_norm(layers.conv2d(convs[-1], num_outputs=n_channels, kernel_size=3, activation_fn=None,
-                                            stride=1, padding='SAME'), is_training=is_training, decay=0.95))
+                                            stride=1, padding='SAME'), is_training=True, decay=0.95))
         convs.append(conv)
 
     if last:

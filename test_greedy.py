@@ -23,7 +23,7 @@ class test_code:
 
         self.checkpoint_path = os.path.join(self.home_path, 'save')
         self.max_iters = 100000
-        self.batch_size = 8
+        self.batch_size = 16
         self.valid_batch_size = 2
         self.finetune_encoder_after = -1
         # Evaluation Checkpoint
@@ -31,8 +31,8 @@ class test_code:
         self.EvaEach = 2500
         self.SummaryEach = 1000
         self.device = "/gpu:0"
-        self.batch_Imagesize = 250000
-        self.valid_batch_Imagesize = 250000
+        self.batch_Imagesize = 500000
+        self.valid_batch_Imagesize = 500000
         self.maxImagesize = 500000
         self.maxlen = 200
         self.n_epoch = 10000
@@ -97,11 +97,11 @@ class test_code:
         Words = [w[0] for w in Words]
         for c in Words:
             print(self.worddicts_r[c])
-        for i in range(0,10):
-            im = np.reshape(Alphas[i],(height,width,1))
-            norm_image = np.zeros((height,width))
+        
+        im = np.reshape(Alphas[0],(height,width,1))
+            #norm_image = np.zeros((height,width))
             #norm_image = cv2.normalize(im, norm_image, alpha=0, beta=1, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_32F)
-            #print(norm_image)
+        print(im)
             #cv2.imwrite('attention' + str(i) + '.png', norm_image*255)
         # self.writer.close()
         return Words, np.squeeze(x[0])

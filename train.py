@@ -87,7 +87,7 @@ class train_code:
                 avg_acc = avg_acc + Acc
                 count = count + 1
                 if (not (j % 100)):
-                    print(first_pred)
+                    print(first_pred[0])
                     avg_loss = avg_loss / count
                     avg_acc = avg_acc/count
                     print(j, avg_acc)

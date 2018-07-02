@@ -186,7 +186,7 @@ class MathFormulaRecognizer():
         xentropy = tf.nn.softmax_cross_entropy_with_logits(logits=logit, labels=onehot)
         predict = tf.cast(tf.argmax(logit, axis=1), tf.int32)
         if i == 0:
-            self.first_pred = predict
+            self.first_pred = alpha_t
         # print(predict.get_shape())
         correct_prediction = tf.equal(predict, self.y[:, i])
         # print(correct_prediction.get_shape())

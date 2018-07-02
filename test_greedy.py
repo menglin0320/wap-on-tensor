@@ -7,7 +7,7 @@ from util import *
 
 def attention_on_origin(attention, im):
     height, width = im.shape
-    aug_attention = cv2.resize(attention, (height, width))
+    aug_attention = cv2.resize(attention, (width, height))
     ret = np.zeros((height, width))
     ret = cv2.normalize(im+aug_attention, ret, alpha=0, beta=1, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_32F)
     return ret

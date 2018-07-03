@@ -110,7 +110,7 @@ class test_code:
         print(str)
         with_atts = []
         for i in range(0,10):
-            with_att = attention_on_origin(np.reshape(Alphas[i], (height, width, 1)), np.squeeze(x[0]))
+            with_att = attention_on_origin(np.reshape(Beta[i], (height, width, 1)), np.squeeze(x[0]))
             with_atts.append(with_att)
         # print(debug)
             #cv2.imwrite('attention' + str(i) + '.png', norm_image*255)

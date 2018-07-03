@@ -25,7 +25,7 @@ class MathFormulaRecognizer():
         self.y_mask = tf.placeholder(tf.float32, [None, None])
         self.seq_length = tf.shape(self.y)[1]
 
-        self.initial_lr = 2e-10
+        self.initial_lr = 20
         self.num_label = num_label
         self.dim_hidden = dim_hidden
         self.coverage_depth = 128
@@ -264,7 +264,7 @@ class MathFormulaRecognizer():
         self.lr = tf.train.exponential_decay(self.initial_lr, self.counter_dis, 1500, 0.96, staircase = True)
         opt = layers.optimize_loss(loss=total_loss, learning_rate=self.lr,
                                    optimizer=tf.train.AdadeltaOptimizer,
-                                   clip_gradients=50., global_step=self.counter_dis)
+                                   clip_gradients=100., global_step=self.counter_dis)
 
         return accuracy, total_loss, opt
 

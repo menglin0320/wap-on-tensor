@@ -264,7 +264,7 @@ class MathFormulaRecognizer():
         self.lr = tf.train.exponential_decay(self.initial_lr, self.counter_dis, 1500, 0.96, staircase = True)
         opt = layers.optimize_loss(loss=total_loss, learning_rate=self.lr,
                                    optimizer=tf.train.AdadeltaOptimizer,
-                                   clip_gradients=100., global_step=self.counter_dis)
+                                   clip_gradients=50., global_step=self.counter_dis)
 
         return accuracy, total_loss, opt
 

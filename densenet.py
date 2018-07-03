@@ -1,15 +1,25 @@
 import tensorflow as tf
 import tensorflow.contrib.layers as layers
 
+
 class Dense_encoder:
-    def __init__(self):
-        TF_VERSION = float('.'.join(tf.__version__.split('.')[:2]))
+    def __init__(self, is_training, growth_rate, n_conv):
+        self.reduction = 0.5
+        self.keep_prob = 0.8
+        self.is_training = is_training
+        self.grownth_rate = growth_rate
+        self.n_conv = n_conv
 
-    def Dense_encoder(image_batch):
-
+    def build_encoder(self, image_batch):
         first_layer = layers.conv2d(image_batch, num_outputs=48, kernel_size=7, activation_fn=None,
-                                                stride=2, padding='SAME')
-
+                                    stride=2, padding='SAME')
+        shrinked = layers.max_pool2d(first_layer, 2, 2, padding='SAME')
+        _input = shrinked
+        for i in range(0, 2):
+            denseblock_out = self.add_block(_input, self.growth_rate, self.n_conv//2)
+            _input = self.transition_layer(denseblock_out)
+        denseblock_out = self.add_block(_input, self.growth_rate, self.n_conv // 2)
+        return self.batch_norm(tf.nn.relu(denseblock_out))
 
     def composite_function(self, _input, out_features, kernel_size=3):
         """Function from paper H_l that performs:
@@ -45,14 +55,9 @@ class Dense_encoder:
         """Perform H_l composite function for the layer and after concatenate
         input with output from composite function.
         """
-        # call composite function with 3x3 kernel
-        if not self.bc_mode:
-            comp_out = self.composite_function(
-                _input, out_features=growth_rate, kernel_size=3)
-        elif self.bc_mode:
-            bottleneck_out = self.bottleneck(_input, out_features=growth_rate)
-            comp_out = self.composite_function(
-                bottleneck_out, out_features=growth_rate, kernel_size=3)
+        bottleneck_out = self.bottleneck(_input, out_features=growth_rate)
+        comp_out = self.composite_function(
+            bottleneck_out, out_features=growth_rate, kernel_size=3)
 
         output = tf.concat(axis=3, values=(_input, comp_out))
         return output
@@ -110,8 +115,14 @@ class Dense_encoder:
             output = _input
         return output
 
-    def weight_variable_xavier(self, shape, name):
+    # def weight_variable_xavier(self, shape, name):
+    #     return tf.get_variable(
+    #         name,
+    #         shape=shape,
+    #         initializer=tf.contrib.layers.xavier_initializer())
+
+    def weight_variable_msra(self, shape, name):
         return tf.get_variable(
-            name,
+            name=name,
             shape=shape,
-            initializer=tf.contrib.layers.xavier_initializer())
+            initializer=tf.contrib.layers.variance_scaling_initializer())

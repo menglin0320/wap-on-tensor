@@ -121,7 +121,7 @@ class test_code:
 
 if __name__ == "__main__":
     test_obj = test_code()
-    latex_ret, im, with_atts = test_obj.run(0)
+    latex_ret, im, with_atts = test_obj.run(200)
     cv2.imwrite('test_out.png', im * 255)
     for i in range(0, 10):
         cv2.imwrite('with_att' + str(i) +'.png', with_atts[i] * 255)

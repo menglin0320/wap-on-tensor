@@ -6,8 +6,8 @@ import tensorflow.contrib.rnn as rnns
 def layer_stack(in_map, n_layers, n_channels, last=False, is_training=True):
     convs = [in_map]
     for i in range(0, n_layers):
-        conv = tf.nn.relu(layers.batch_norm(layers.conv2d(convs[-1], num_outputs=n_channels, kernel_size=3, activation_fn=None,
-                                        stride=1, padding='SAME'), is_training=is_training, decay=0.999))
+        conv = layers.batch_norm(layers.conv2d(convs[-1], num_outputs=n_channels, kernel_size=3, activation_fn=tf.nn.relu,
+                                        stride=1, padding='SAME'), is_training=is_training, decay=0.999)
         convs.append(conv)
         if last and not i == n_layers - 1:
             print(i)

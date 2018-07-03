@@ -9,7 +9,7 @@ def layer_stack(in_map, n_layers, n_channels, last=False, is_training=True):
         conv = layers.batch_norm(layers.conv2d(convs[-1], num_outputs=n_channels, kernel_size=3, activation_fn=tf.nn.relu,
                                         stride=1, padding='SAME'), is_training=is_training, decay=0.95)
         convs.append(conv)
-        if last and i != n_layers - 1:
+        if last and not i == n_layers - 1:
             convs[-1] = layers.dropout(convs[-1], keep_prob=0.8, is_training=is_training)
     return convs[-1]
 

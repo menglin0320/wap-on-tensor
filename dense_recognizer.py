@@ -1,17 +1,7 @@
 import tensorflow as tf
 import tensorflow.contrib.layers as layers
 import tensorflow.contrib.rnn as rnns
-
-
-def layer_stack(in_map, n_layers, n_channels, last=False, is_training=True):
-    convs = [in_map]
-    for i in range(0, n_layers):
-        conv = tf.nn.relu(layers.batch_norm(layers.conv2d(convs[-1], num_outputs=n_channels, kernel_size=3, activation_fn=None,
-                                        stride=1, padding='SAME'), is_training=is_training, decay=0.999))
-        convs.append(conv)
-        if last and not i == n_layers - 1:
-            convs[-1] = layers.dropout(convs[-1], keep_prob=0.8, is_training=is_training)
-    return convs[-1]
+from densenet import Dense_encoder
 
 
 class MathFormulaRecognizer():
@@ -25,17 +15,19 @@ class MathFormulaRecognizer():
         self.y_mask = tf.placeholder(tf.float32, [None, None])
         self.seq_length = tf.shape(self.y)[1]
 
+        self.growth_rate = 24
+        self.layer_per_block = 32
         self.initial_lr = 2.
         self.num_label = num_label
         self.dim_hidden = dim_hidden
-        self.coverage_depth = 128
-        self.dim_embed = 128
+        self.coverage_depth = 256
+        self.dim_embed = 256
         self.is_train = tf.placeholder(tf.bool)
         self.batch_size = tf.shape(self.x)[0]
         self.in_height = tf.shape(self.x)[1]
         self.in_width = tf.shape(self.x)[2]
-        self.latent_depth = 128
-        self.attention_dimension = self.latent_depth
+        self.latent_depth = 768
+        self.attention_dimension = 512
 
         self.weight_initializer = tf.contrib.layers.xavier_initializer()
         self.bias_initializer = tf.constant_initializer(0.0)
@@ -62,24 +54,15 @@ class MathFormulaRecognizer():
 
     def construct_encoder(self):
         with tf.variable_scope('Encoder'):
-            first_stack = layer_stack(self.x, 4, 32, is_training=self.is_train)
-            pooled = layers.max_pool2d(first_stack, 2, 2, padding='VALID')
+            Dencoder = Dense_encoder(self.is_training, self.growth_rate, self.layer_per_block)
 
-            second_stack = layer_stack(pooled, 4, 64, is_training=self.is_train)
-            pooled = layers.max_pool2d(second_stack, 2, 2, padding='VALID')
-
-            third_stack = layer_stack(pooled, 4, 64, is_training=self.is_train)
-            pooled = layers.max_pool2d(third_stack, 2, 2, padding='VALID')
-
-            fourth_stack = layer_stack(pooled, 4, 128, True, self.is_train)
-            pooled = layers.max_pool2d(fourth_stack, 2, 2, padding='VALID')
+            self.information_tensor = self.Dencoder.build_encoder(self.x)
 
             self.ex_mask = layers.max_pool2d(self.ex_mask, 2, 2, padding='VALID')
             self.ex_mask = layers.max_pool2d(self.ex_mask, 2, 2, padding='VALID')
             self.ex_mask = layers.max_pool2d(self.ex_mask, 2, 2, padding='VALID')
             self.ex_mask = layers.max_pool2d(self.ex_mask, 2, 2, padding='VALID')
 
-            self.information_tensor = pooled
 
     def set_Decoder_parameter(self):
         # Decoder:
@@ -147,7 +130,7 @@ class MathFormulaRecognizer():
                          strides=[1, 1, 1, 1], padding='SAME')
         F = tf.nn.bias_add(F, self.b_B2f)
 
-        # though it's okay to directly use state, in this way it is clearer.
+        # though it's okay to directly use state, in this way it is clearer.git statu
         out = state
         weighted_h = tf.matmul(out, self.w_hidden) + self.bias_hidden
 

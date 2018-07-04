@@ -1,3 +1,5 @@
+import sys
+
 import cv2
 import tensorflow as tf
 
@@ -5,12 +7,14 @@ from Recognizer import MathFormulaRecognizer
 from data_iterator import dataIterator
 from util import *
 
+
 def attention_on_origin(attention, im):
     height, width = im.shape
     aug_attention = cv2.resize(attention, (width, height))
     ret = np.zeros((height, width))
-    ret = cv2.normalize(im+aug_attention, ret, alpha=0, beta=1, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_32F)
+    ret = cv2.normalize(im + aug_attention, ret, alpha=0, beta=1, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_32F)
     return ret
+
 
 def softmax(x):
     return np.exp(x) / np.sum(np.exp(x), axis=0)
@@ -109,20 +113,20 @@ class test_code:
         str = ''.join(str_list)
         print(str)
         with_atts = []
-        for i in range(0,10):
-            with_att = attention_on_origin(np.reshape(Beta[i], (height, width, 1)), np.squeeze(x[0]))
+        for i in range(0, 10):
+            with_att = attention_on_origin(np.reshape(Alphas[i], (height, width, 1)), np.squeeze(x[0]))
             with_atts.append(with_att)
-        # print(debug)
-            #cv2.imwrite('attention' + str(i) + '.png', norm_image*255)
-        # self.writer.close()
+
         return Words, np.squeeze(x[0]), with_atts
 
 
-
 if __name__ == "__main__":
+    if len(sys.argv) != 2:
+        print('please give one arg to specify image batch')
+    batch_selected = int(sys.argv[1])
     test_obj = test_code()
-    latex_ret, im, with_atts = test_obj.run(1)
+    latex_ret, im, with_atts = test_obj.run(batch_selected)
     cv2.imwrite('test_out.png', im * 255)
     for i in range(0, 10):
-        cv2.imwrite('with_att' + str(i) +'.png', with_atts[i] * 255)
+        cv2.imwrite('with_att' + str(i) + '.png', with_atts[i] * 255)
     print(latex_ret)

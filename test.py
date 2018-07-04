@@ -1,16 +1,18 @@
+import sys
+
+import cv2
 import tensorflow as tf
 
 from Recognizer import MathFormulaRecognizer
 from data_iterator import dataIterator
 from util import *
 
-import cv2
 
 def softmax(x):
     return np.exp(x) / np.sum(np.exp(x), axis=0)
 
 
-#TODO save and check attention
+# TODO save and check attention
 class test_code:
     def __init__(self):
         self.init_config()
@@ -72,8 +74,8 @@ class test_code:
                                 maxlen=self.maxlen, maxImagesize=self.maxImagesize)
 
     def run(self, batch_picked):
-        #This code assumes that at least one character in the list
-        #is recognized
+        # This code assumes that at least one character in the list
+        # is recognized
         train, train_uid_list = self.get_data('train')
         valid, valid_uid_list = self.get_data('test')
         valid = np.squeeze(valid)
@@ -156,11 +158,15 @@ class test_code:
                     finish_flag = True
                     break
         for c in latex_array:
-            print (self.worddicts_r[c])
+            print(self.worddicts_r[c])
         return latex_array, np.squeeze(x[0])
 
+
 if __name__ == "__main__":
+    if len(sys.argv) != 2:
+        print('please give one arg to specify image batch')
+    batch_selected = int(sys.argv[1])
     test_obj = test_code()
-    latex_ret,im = test_obj.run(2)
-    cv2.imwrite('test_out.png', im*255)
+    latex_ret, im = test_obj.run(batch_selected)
+    cv2.imwrite('test_out.png', im * 255)
     print(latex_ret)

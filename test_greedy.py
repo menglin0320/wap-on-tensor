@@ -7,7 +7,6 @@ from util import *
 
 def attention_on_origin(attention, im):
     height, width = im.shape
-    print(attention)
     aug_attention = cv2.resize(attention, (width, height))
     ret = np.zeros((height, width))
     ret = cv2.normalize(im+aug_attention, ret, alpha=0, beta=1, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_32F)
@@ -89,7 +88,7 @@ class test_code:
         train = np.squeeze(train)
         sess = self.sess
         model = self.model
-        x, x_mask, y, y_mask = prepare_data(train[batch_picked, 0], train[batch_picked, 1])
+        x, x_mask, y, y_mask = prepare_data(valid[batch_picked, 0], valid[batch_picked, 1])
         # for simplicity only test first image on the batch
         x = x[0:1, :, :, :]
         x_mask = x_mask[0:1, :, :]
@@ -122,7 +121,7 @@ class test_code:
 
 if __name__ == "__main__":
     test_obj = test_code()
-    latex_ret, im, with_atts = test_obj.run(0)
+    latex_ret, im, with_atts = test_obj.run(1)
     cv2.imwrite('test_out.png', im * 255)
     for i in range(0, 10):
         cv2.imwrite('with_att' + str(i) +'.png', with_atts[i] * 255)

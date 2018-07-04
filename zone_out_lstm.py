@@ -26,11 +26,13 @@
 
 import numpy as np
 import tensorflow as tf
-from tensorflow.python.ops.rnn_cell import RNNCell
-from tensorflow.python.ops import variable_scope as vs
 from tensorflow.contrib.layers.python.layers import layers
-from tensorflow.python.ops import init_ops
 from tensorflow.python.framework import dtypes
+from tensorflow.python.ops import init_ops
+from tensorflow.python.ops import variable_scope as vs
+from tensorflow.python.ops.rnn_cell import RNNCell
+
+
 # Thanks to 'initializers_enhanced.py' of Project RNN Enhancement:
 # https://github.com/nicolas-ivanov/Seq2Seq_Upgrade_TensorFlow/blob/master/rnn_enhancement/initializers_enhanced.py
 def orthogonal_initializer(scale=1.0):
@@ -41,7 +43,9 @@ def orthogonal_initializer(scale=1.0):
         q = u if u.shape == flat_shape else v
         q = q.reshape(shape)
         return tf.constant(scale * q[:shape[0], :shape[1]], dtype=tf.float32)
+
     return _initializer
+
 
 def _linear(args, output_size, bias, bias_start=0.0, scope=None):
     """Linear map: sum_i(args[i] * W[i]), where W[i] is a variable.
@@ -90,7 +94,6 @@ def _linear(args, output_size, bias, bias_start=0.0, scope=None):
     return res + bias_term
 
 
-
 class ZoneoutLSTMCell(RNNCell):
     """Zoneout Regularization for LSTM-RNN.
     """
@@ -102,10 +105,10 @@ class ZoneoutLSTMCell(RNNCell):
                  forget_bias=1.0,
                  state_is_tuple=True,
                  activation=tf.tanh,
-                 zoneout_factor_cell=0.0,
-                 zoneout_factor_output=0.0,
-                 norm_gain = 1.0,
-                 norm_shift = 0.0,
+                 zoneout_factor_cell=0.5,
+                 zoneout_factor_output=0.05,
+                 norm_gain=1.0,
+                 norm_shift=0.0,
                  reuse=None):
         """Initialize the parameters for an LSTM cell.
         Args:
@@ -227,7 +230,7 @@ class ZoneoutLSTMCell(RNNCell):
                 binary_mask_cell = tf.floor(random_tensor_cell)
                 # 0 <-> 1 swap
                 binary_mask_cell_complement = tf.ones(tf.shape(c_prev)) \
-                    - binary_mask_cell
+                                              - binary_mask_cell
 
                 # make binary mask tensor for output
                 keep_prob_output = tf.convert_to_tensor(
@@ -241,15 +244,15 @@ class ZoneoutLSTMCell(RNNCell):
                 binary_mask_output = tf.floor(random_tensor_output)
                 # 0 <-> 1 swap
                 binary_mask_output_complement = tf.ones(tf.shape(h_prev)) \
-                    - binary_mask_output
+                                                - binary_mask_output
 
             # apply zoneout for cell
             if self.use_peepholes:
                 c_temp = c_prev * \
-                    tf.sigmoid(f + self.forget_bias +
-                               w_f_diag * c_prev) + \
-                    tf.sigmoid(i + w_i_diag * c_prev) * \
-                    self.activation(j)
+                         tf.sigmoid(f + self.forget_bias +
+                                    w_f_diag * c_prev) + \
+                         tf.sigmoid(i + w_i_diag * c_prev) * \
+                         self.activation(j)
                 if self.is_training and self.zoneout_factor_cell > 0.0:
                     c = binary_mask_cell * c_prev + \
                         binary_mask_cell_complement * c_temp
@@ -257,7 +260,7 @@ class ZoneoutLSTMCell(RNNCell):
                     c = c_temp
             else:
                 c_temp = c_prev * tf.sigmoid(f + self.forget_bias) + \
-                    tf.sigmoid(i) * self.activation(j)
+                         tf.sigmoid(i) * self.activation(j)
                 if self.is_training and self.zoneout_factor_cell > 0.0:
                     c = binary_mask_cell * c_prev + \
                         binary_mask_cell_complement * c_temp
@@ -304,10 +307,8 @@ class ZoneoutLSTMCell(RNNCell):
         gamma_init = init_ops.constant_initializer(self._norm_gain)
         beta_init = init_ops.constant_initializer(self._norm_shift)
         with vs.variable_scope(scope):
-          # Initialize beta and gamma for use by layer_norm.
-          vs.get_variable("gamma", shape=shape, initializer=gamma_init, dtype=dtype)
-          vs.get_variable("beta", shape=shape, initializer=beta_init, dtype=dtype)
+            # Initialize beta and gamma for use by layer_norm.
+            vs.get_variable("gamma", shape=shape, initializer=gamma_init, dtype=dtype)
+            vs.get_variable("beta", shape=shape, initializer=beta_init, dtype=dtype)
         normalized = layers.layer_norm(inp, reuse=True, scope=scope)
         return normalized
-
-

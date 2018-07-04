@@ -2,6 +2,8 @@ import tensorflow as tf
 import tensorflow.contrib.layers as layers
 import tensorflow.contrib.rnn as rnns
 
+from focal_loss import focal_loss
+from zone_out_lstm import ZoneoutLSTMCell
 
 def layer_stack(in_map, n_layers, n_channels, last=False, is_training=True):
     convs = [in_map]
@@ -92,7 +94,7 @@ class MathFormulaRecognizer():
 
         with tf.variable_scope('Decoder'):
             # notice that for gru, out equal to state
-            self.gru = rnns.GRUCell(self.dim_hidden)
+            self.gru = ZoneoutLSTMCell(self.dim_hidden, self.is_training)
 
             self.w_hidden = tf.get_variable("w_hidden", shape=[self.dim_hidden, self.attention_dimension],
                                             initializer=self.weight_initializer)
@@ -182,7 +184,7 @@ class MathFormulaRecognizer():
         onehot = tf.sparse_to_dense(sparse, tf.stack([self.batch_size, self.num_label]), 1.0, 0.0)
         logit = tf.matmul(out, self.w_2logit) + self.bias_2logit
         # make those self just make it easier to debug
-        xentropy = tf.nn.softmax_cross_entropy_with_logits(logits=logit, labels=onehot)
+        xentropy = tf.nn.focal_loss(prediction_tensor=logit, target_tensor=onehot)
         predict = tf.cast(tf.argmax(logit, axis=1), tf.int32)
 
         # print(predict.get_shape())

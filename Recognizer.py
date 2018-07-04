@@ -94,12 +94,18 @@ class MathFormulaRecognizer():
 
         with tf.variable_scope('Decoder'):
             # notice that for gru, out equal to state
-            self.gru = ZoneoutLSTMCell(self.dim_hidden, self.is_training)
+            self.gru = ZoneoutLSTMCell(self.dim_hidden, self.is_train)
 
             self.w_hidden = tf.get_variable("w_hidden", shape=[self.dim_hidden, self.attention_dimension],
                                             initializer=self.weight_initializer)
 
             self.bias_hidden = tf.get_variable("bias_hidden", shape=[self.attention_dimension],
+                                               initializer=self.bias_initializer)
+
+            self.w_c = tf.get_variable("w_c", shape=[self.dim_hidden, self.attention_dimension],
+                                            initializer=self.weight_initializer)
+
+            self.bias_c = tf.get_variable("bias_c", shape=[self.attention_dimension],
                                                initializer=self.bias_initializer)
 
             self.w_annotation = tf.get_variable("w_annotation", shape=[self.latent_depth, self.attention_dimension],
@@ -126,6 +132,12 @@ class MathFormulaRecognizer():
             self.bias_init2hid = tf.get_variable("bias_init2hid", shape=[self.dim_hidden],
                                                  initializer=self.bias_initializer)
 
+            self.w_init2c = tf.get_variable('w_init2c', shape=[self.latent_depth, self.dim_hidden],
+                                              initializer=self.weight_initializer)
+
+            self.bias_init2c = tf.get_variable("bias_init2c", shape=[self.dim_hidden],
+                                                 initializer=self.bias_initializer)
+
             self.w_B2f_filter = tf.get_variable("w_B2f_filter", shape=[11, 11, 1, self.coverage_depth],
                                                 initializer=self.weight_initializer)
 
@@ -145,13 +157,12 @@ class MathFormulaRecognizer():
 
             self.counter_dis = tf.Variable(trainable=False, initial_value=0, dtype=tf.int32)
 
-    def decoding_one_word_train(self, beta_t, state, previous_vec, i):
+    def decoding_one_word_train(self, beta_t, state, out, previous_vec, i):
         F = tf.nn.conv2d(tf.reshape(beta_t, [-1, self.feature_height, self.feature_width, 1]), self.w_B2f_filter,
                          strides=[1, 1, 1, 1], padding='SAME')
         F = tf.nn.bias_add(F, self.b_B2f)
 
         # though it's okay to directly use state, in this way it is clearer.
-        out = state
         weighted_h = tf.matmul(out, self.w_hidden) + self.bias_hidden
 
         weighted_annotation = self.project_features(self.information_tensor, 'feature')
@@ -184,7 +195,7 @@ class MathFormulaRecognizer():
         onehot = tf.sparse_to_dense(sparse, tf.stack([self.batch_size, self.num_label]), 1.0, 0.0)
         logit = tf.matmul(out, self.w_2logit) + self.bias_2logit
         # make those self just make it easier to debug
-        xentropy = tf.nn.focal_loss(prediction_tensor=logit, target_tensor=onehot)
+        xentropy = focal_loss(prediction_tensor=logit, target_tensor=onehot)
         predict = tf.cast(tf.argmax(logit, axis=1), tf.int32)
 
         # print(predict.get_shape())
@@ -196,15 +207,14 @@ class MathFormulaRecognizer():
         xentropy = xentropy * self.y_mask[:, i]
 
         loss = tf.reduce_sum(xentropy)
-        return correct, loss, beta_t, out
+        return correct, loss, beta_t, state, out
 
-    def decoding_one_word_validate(self, beta_t, state, previous_vec, i):
+    def decoding_one_word_validate(self, beta_t, state, out, previous_vec, i):
         F = tf.nn.conv2d(tf.reshape(beta_t, [-1, self.feature_height, self.feature_width, 1]), self.w_B2f_filter,
                          strides=[1, 1, 1, 1], padding='SAME')
         F = tf.nn.bias_add(F, self.b_B2f)
 
         # though it's okay to directly use state as out, in this way it is clearer.
-        out = state
         weighted_h = tf.matmul(out, self.w_hidden) + self.bias_hidden
 
         weighted_annotation = self.project_features(self.information_tensor, 'feature')
@@ -230,36 +240,37 @@ class MathFormulaRecognizer():
         out, state = self.gru(gru_in, state)
         logit = tf.matmul(out, self.w_2logit) + self.bias_2logit
 
-        return beta_t, out, logit, alpha_t
+        return beta_t, state, out, logit, alpha_t
 
     def build_train(self):
         # initialization:
         beta_t = tf.zeros([self.batch_size, self.feature_size], dtype=tf.float32)
-        state = tf.matmul(self.mean_feature, self.w_init2hid) + self.bias_init2hid
+        out = tf.nn.tanh(tf.matmul(self.mean_feature, self.w_init2hid) + self.bias_init2hid)
+        c = tf.nn.tanh(tf.matmul(self.mean_feature, self.w_init2c) + self.bias_init2c)
         total_loss = tf.constant(0.0, dtype=tf.float32)
         total_correct = tf.constant(0.0, dtype=tf.float32)
-        self.first_pred = state
+        state = (c, out)
         with tf.variable_scope('Decoder'):
             start_vec = tf.tile(tf.constant([self.start_token, ]), [self.batch_size])
-            cur_correct, loss, beta_t, out = self.decoding_one_word_train(beta_t, state, start_vec, 0)
+            cur_correct, loss, beta_t, state, out = self.decoding_one_word_train(beta_t, state, out, start_vec, 0)
             total_loss += loss
             total_correct += cur_correct
             # first_round
             tf.get_variable_scope().reuse_variables()
             i = tf.constant(1)
-            while_condition = lambda N1, N2, i, N3, N4: tf.less(i, self.seq_length)
+            while_condition = lambda N1, N2, i, N3, N4, N5: tf.less(i, self.seq_length)
 
             # keep alpha_t for debugging, may get rid of it later.
             # Notice that for gru state = out
-            def body(total_correct, total_loss , i, beta_t, state):
-                cur_correct, loss, beta_t, out = self.decoding_one_word_train(beta_t, state, self.y[:, i - 1], i)
+            def body(total_correct, total_loss , i, beta_t, state, out):
+                cur_correct, loss, beta_t, state, out = self.decoding_one_word_train(beta_t, state, out, self.y[:, i - 1], i)
                 total_loss += loss
                 total_correct += cur_correct
-                return [total_correct, total_loss, tf.add(i, 1), beta_t, out]
+                return [total_correct, total_loss, tf.add(i, 1), beta_t, state, out]
 
             # do the loop:
-            [total_correct, total_loss, i, beta_t, out] = tf.while_loop(while_condition, body,
-                                                         [total_correct, total_loss, i, beta_t, out])
+            [total_correct, total_loss, i, beta_t, state, out] = tf.while_loop(while_condition, body,
+                                                         [total_correct, total_loss, i, beta_t, state, out])
             total_loss = total_loss / tf.reduce_sum(self.y_mask)
             # self.total_correct = total_correct
             # self.valid_digits = tf.reduce_sum(self.y_mask)
@@ -275,8 +286,9 @@ class MathFormulaRecognizer():
         beta_t = tf.zeros([self.batch_size, self.feature_size], dtype=tf.float32)
 
         # c = tf.matmul(self.mean_feature,self.w_init2c) + self.bias_init2c
-        state = tf.matmul(self.mean_feature, self.w_init2hid) + self.bias_init2hid
-        out = state
+        out = tf.nn.tanh(tf.matmul(self.mean_feature, self.w_init2hid) + self.bias_init2hid)
+        c = tf.nn.tanh(tf.matmul(self.mean_feature, self.w_init2c) + self.bias_init2c)
+        state = (c, out)
         self.in_previous_word = tf.tile(tf.constant([self.start_token, ]), [self.batch_size])
         previous_word = self.in_previous_word
         self.debug = out
@@ -286,10 +298,9 @@ class MathFormulaRecognizer():
         with tf.variable_scope('Decoder'):
             for i in range(0, max_len):
                 # have alpha_t for debugging
-                beta_t, out, logit, alpha_t = self.decoding_one_word_validate(beta_t, state, previous_word, i)
+                beta_t, state, out, logit, alpha_t = self.decoding_one_word_validate(beta_t, state, out, previous_word, i)
                 words.append(previous_word)
                 previous_word = tf.argmax(logit, 1)
-                state = out
                 alphas.append(alpha_t)
                 betas.append(beta_t)
         return words, alphas, betas
@@ -299,14 +310,15 @@ class MathFormulaRecognizer():
         self.in_beta_t = tf.zeros([self.batch_size, self.feature_size], dtype=tf.float32)
         beta_t = self.in_beta_t
 
+        self.out = tf.nn.tanh(tf.matmul(self.mean_feature, self.w_init2hid) + self.bias_init2hid)
+        c = tf.nn.tanh(tf.matmul(self.mean_feature, self.w_init2c) + self.bias_init2c)
+        self.in_state = (c, self.out)
         # c = tf.matmul(self.mean_feature,self.w_init2c) + self.bias_init2c
-        self.in_state = tf.matmul(self.mean_feature, self.w_init2hid) + self.bias_init2hid
         state = self.in_state
 
         self.in_previous_word = tf.tile(tf.constant([111, ]), [self.batch_size])
         previous_word = self.in_previous_word
 
         with tf.variable_scope('Decoder'):
-            beta_t, out, logit, alpha_t = self.decoding_one_word_validate(beta_t, state, previous_word,1)
-            state = out
+            beta_t, state, out, logit, alpha_t = self.decoding_one_word_validate(beta_t, state, self.out, previous_word, 1)
         return alpha_t, beta_t, state, logit

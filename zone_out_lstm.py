@@ -27,10 +27,10 @@
 import numpy as np
 import tensorflow as tf
 from tensorflow.contrib.layers.python.layers import layers
-from tensorflow.python.framework import dtypes
 from tensorflow.python.ops import init_ops
+# from tensorflow.python.ops.rnn_cell import RNNCell
+from tensorflow.python.ops import rnn_cell_impl
 from tensorflow.python.ops import variable_scope as vs
-from tensorflow.python.ops.rnn_cell import RNNCell
 
 
 # Thanks to 'initializers_enhanced.py' of Project RNN Enhancement:
@@ -85,16 +85,29 @@ def _linear(args, output_size, bias, bias_start=0.0, scope=None):
         if len(args) == 1:
             res = tf.matmul(args[0], matrix)
         else:
-            res = tf.matmul(tf.concat(1, args), matrix)
+            res = tf.matmul(tf.concat(args, 1), matrix)
         if not bias:
             return res
         bias_term = tf.get_variable(
             "Bias", [output_size],
             initializer=tf.constant_initializer(bias_start))
-    return res + bias_term
+        # no bias beacue we apply layer norm
+    return res
 
 
-class ZoneoutLSTMCell(RNNCell):
+def _norm(g, b, inp, scope):
+    shape = inp.get_shape()[-1:]
+    gamma_init = init_ops.constant_initializer(g)
+    beta_init = init_ops.constant_initializer(b)
+    with vs.variable_scope(scope):
+        # Initialize beta and gamma for use by layer_norm.
+        vs.get_variable("gamma", shape=shape, initializer=gamma_init)
+        vs.get_variable("beta", shape=shape, initializer=beta_init)
+    normalized = layers.layer_norm(inp, reuse=True, scope=scope)
+    return normalized
+
+
+class ZoneoutLSTMCell(rnn_cell_impl.RNNCell):
     """Zoneout Regularization for LSTM-RNN.
     """
 
@@ -201,12 +214,12 @@ class ZoneoutLSTMCell(RNNCell):
 
             # i = input_gate, j = new_input, f = forget_gate, o = output_gate
             lstm_matrix = _linear([inputs, h_prev], 4 * self.num_units, True)
-            i, j, f, o = tf.split(1, 4, lstm_matrix)
+            i, j, f, o = tf.split(lstm_matrix, 4, 1)
 
-            i = self._norm(self._norm_gain, self._norm_shift, i, "input")
-            j = self._norm(self._norm_gain, self._norm_shift, j, "transform")
-            f = self._norm(self._norm_gain, self._norm_shift, f, "forget")
-            o = self._norm(self._norm_gain, self._norm_shift, o, "output")
+            i = _norm(self._norm_gain, self._norm_shift, i, "input")
+            j = _norm(self._norm_gain, self._norm_shift, j, "transform")
+            f = _norm(self._norm_gain, self._norm_shift, f, "forget")
+            o = _norm(self._norm_gain, self._norm_shift, o, "output")
 
             # diagonal connections
             if self.use_peepholes:
@@ -253,21 +266,30 @@ class ZoneoutLSTMCell(RNNCell):
                                     w_f_diag * c_prev) + \
                          tf.sigmoid(i + w_i_diag * c_prev) * \
                          self.activation(j)
-                if self.is_training and self.zoneout_factor_cell > 0.0:
-                    c = binary_mask_cell * c_prev + \
-                        binary_mask_cell_complement * c_temp
-                else:
-                    c = c_temp
+                c = tf.cond(self.is_training,
+                            lambda: binary_mask_cell * c_prev +
+                                    binary_mask_cell_complement * c_temp,
+                            lambda: c_temp)
+                # if self.is_training and self.zoneout_factor_cell > 0.0:
+                #     c = binary_mask_cell * c_prev + \
+                #         binary_mask_cell_complement * c_temp
+                # else:
+                #     c = c_temp
             else:
                 c_temp = c_prev * tf.sigmoid(f + self.forget_bias) + \
                          tf.sigmoid(i) * self.activation(j)
-                if self.is_training and self.zoneout_factor_cell > 0.0:
-                    c = binary_mask_cell * c_prev + \
-                        binary_mask_cell_complement * c_temp
-                else:
-                    c = c_temp
+                c = tf.cond(self.is_training,
+                            lambda: binary_mask_cell * c_prev +
+                                    binary_mask_cell_complement * c_temp,
+                            lambda: c_temp)
 
-            c = self._norm(self._norm_gain, self._norm_shift, c, "state")
+                # if self.is_training and self.zoneout_factor_cell > 0.0:
+                #     c = binary_mask_cell * c_prev + \
+                #         binary_mask_cell_complement * c_temp
+                # else:
+                #     c = c_temp
+
+            c = _norm(self._norm_gain, self._norm_shift, c, "state")
 
             if self.cell_clip is not None:
                 c = tf.clip_by_value(c, -self.cell_clip, self.cell_clip)
@@ -275,20 +297,28 @@ class ZoneoutLSTMCell(RNNCell):
             # apply zoneout for output
             if self.use_peepholes:
                 h_temp = tf.sigmoid(o + w_o_diag * c) * self.activation(c)
-                if self.is_training and self.zoneout_factor_output > 0.0:
-                    h = binary_mask_output * h_prev + \
-                        binary_mask_output_complement * h_temp
-                else:
-                    h = h_temp
+                h = tf.cond(self.is_training,
+                            lambda: binary_mask_output * h_prev +
+                                    binary_mask_output_complement * h_temp,
+                            lambda: h_temp)
+                # if self.is_training and self.zoneout_factor_output > 0.0:
+                #     h = binary_mask_output * h_prev + \
+                #         binary_mask_output_complement * h_temp
+                # else:
+                #     h = h_temp
             else:
                 h_temp = tf.sigmoid(o) * self.activation(c)
-                if self.is_training and self.zoneout_factor_output > 0.0:
-                    h = binary_mask_output * h_prev + \
-                        binary_mask_output_complement * h_temp
-                else:
-                    h = h_temp
+                h = tf.cond(self.is_training,
+                            lambda: binary_mask_output * h_prev +
+                                    binary_mask_output_complement * h_temp,
+                            lambda: h_temp)
+                # if self.is_training and self.zoneout_factor_output > 0.0:
+                #     h = binary_mask_output * h_prev + \
+                #         binary_mask_output_complement * h_temp
+                # else:
+                #     h = h_temp
 
-            # apply prejection
+            # apply projection
             if self.num_proj is not None:
                 w_proj = tf.get_variable(
                     "W_P", [self.num_units, num_proj], dtype=dtype)
@@ -298,17 +328,6 @@ class ZoneoutLSTMCell(RNNCell):
                     h = tf.clip_by_value(h, -self.proj_clip, self.proj_clip)
 
             new_state = (tf.nn.rnn_cell.LSTMStateTuple(c, h)
-                         if self.state_is_tuple else tf.concat(1, [c, h]))
+                         if self.state_is_tuple else tf.concat([c, h], 1))
 
             return h, new_state
-
-    def _norm(self, inp, scope, dtype=dtypes.float32):
-        shape = inp.get_shape()[-1:]
-        gamma_init = init_ops.constant_initializer(self._norm_gain)
-        beta_init = init_ops.constant_initializer(self._norm_shift)
-        with vs.variable_scope(scope):
-            # Initialize beta and gamma for use by layer_norm.
-            vs.get_variable("gamma", shape=shape, initializer=gamma_init, dtype=dtype)
-            vs.get_variable("beta", shape=shape, initializer=beta_init, dtype=dtype)
-        normalized = layers.layer_norm(inp, reuse=True, scope=scope)
-        return normalized

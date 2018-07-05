@@ -6,10 +6,11 @@ from util import *
 from data_iterator import dataIterator
 
 class train_code:
-    def __init__(self):
+    def __init__(self, ind):
         self.config_initialize()
-        self.initialize_model()
         self.load_data()
+        self.initialize_model()
+
 
     def config_initialize(self):
         self.home_path = os.getcwd()
@@ -33,7 +34,12 @@ class train_code:
         checkpoint_dir = self.checkpoint_dir
         self.sess = tf.Session()
         self.model = MathFormulaRecognizer(num_label=112, dim_hidden=128)
-        self.total_correct, self.alphas, self.betas, self.corrects = self.model.eval_train(2)
+
+        train = np.squeeze(self.train)
+        x, x_mask, y, y_mask = prepare_data(train[ind, 0], train[ind, 1])
+        y_mask = np.transpose(y_mask)
+
+        self.total_correct, self.alphas, self.betas, self.corrects = self.model.eval_train(y_mask.shape[1])
         self.saver = tf.train.Saver(max_to_keep=10)
         saved_path = tf.train.latest_checkpoint(checkpoint_dir)
         self.start_step = 0
@@ -80,7 +86,7 @@ class train_code:
         print(corrects)
 
 if __name__ == "__main__":
-    train = train_code()
     ind = 1
+    train = train_code(ind)
     train.run(ind)
 

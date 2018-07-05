@@ -111,6 +111,8 @@ class test_code:
             str_list.append(self.worddicts_r[c])
         str = ''.join(str_list)
         print(str)
+        print(height)
+        print(width)
         with_atts = []
         for i in range(0, 10):
             with_att = attention_on_origin(np.reshape(Beta[i], (height, width, 1)), np.squeeze(x[0]))

@@ -5,11 +5,12 @@ from util import *
 
 from data_iterator import dataIterator
 
-class train_code:
+import sys
+class eval_train_code:
     def __init__(self, ind):
         self.config_initialize()
         self.load_data()
-        self.initialize_model()
+        self.initialize_model(ind)
 
 
     def config_initialize(self):
@@ -30,7 +31,7 @@ class train_code:
         self.maxlen = 200
         self.n_epoch = 10000
 
-    def initialize_model(self):
+    def initialize_model(self, ind):
         checkpoint_dir = self.checkpoint_dir
         self.sess = tf.Session()
         self.model = MathFormulaRecognizer(num_label=112, dim_hidden=128)
@@ -86,7 +87,9 @@ class train_code:
         print(corrects)
 
 if __name__ == "__main__":
-    ind = 1
-    train = train_code(ind)
-    train.run(ind)
+    if len(sys.argv) != 2:
+        print('please give one arg to specify image batch')
+    batch_selected = int(sys.argv[1])
+    test_obj = eval_train_code(batch_selected)
+    test_obj.run(batch_selected)
 

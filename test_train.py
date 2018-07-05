@@ -1,0 +1,86 @@
+import tensorflow as tf
+from Recognizer import MathFormulaRecognizer
+
+from util import *
+
+from data_iterator import dataIterator
+
+class train_code:
+    def __init__(self):
+        self.config_initialize()
+        self.initialize_model()
+        self.load_data()
+
+    def config_initialize(self):
+        self.home_path = os.getcwd()
+        self.checkpoint_path = os.path.join(self.home_path, 'save', 'model.ckpt')
+        self.checkpoint_dir = os.path.join(self.home_path, 'save')
+        self.max_iters = 100000
+        self.batch_size = 16
+        self.valid_batch_size = 8
+        # Evaluation Checkpoint
+        self.nEvaImages = 300
+        self.EvaEach = 2500
+        self.SummaryEach = 1000
+        self.device = "/gpu:0"
+        self.batch_Imagesize = 500000
+        self.valid_batch_Imagesize = 500000
+        self.maxImagesize = 500000
+        self.maxlen = 200
+        self.n_epoch = 10000
+
+    def initialize_model(self):
+        checkpoint_dir = self.checkpoint_dir
+        self.sess = tf.Session()
+        self.model = MathFormulaRecognizer(num_label=112, dim_hidden=128)
+        self.total_correct, self.alphas, self.betas, self.corrects = self.model.eval_train(2)
+        self.saver = tf.train.Saver(max_to_keep=10)
+        saved_path = tf.train.latest_checkpoint(checkpoint_dir)
+        self.start_step = 0
+        if (saved_path):
+            # tf.reset_default_graph()
+            self.saver.restore(self.sess, saved_path)
+            ckpt = tf.train.get_checkpoint_state(checkpoint_dir)
+            step = int(os.path.basename(ckpt.model_checkpoint_path).split('-')[1])
+            self.start_step = int(step)
+            print('model restored', self.start_step)
+        else:
+            self.sess.run(tf.global_variables_initializer())
+
+    def load_data(self):
+        datasets = ['./data/offline-train.pkl',
+                    './data/train_caption.txt']
+        dictionaries = ['./data/dictionary.txt']
+
+        worddicts = load_dict(dictionaries[0])
+        worddicts_r = [None] * len(worddicts)
+
+        for kk, vv in worddicts.items():
+            worddicts_r[vv] = kk
+
+        self.train, self.train_uid_list = dataIterator(datasets[0], datasets[1],
+                                             worddicts,
+                                             batch_size=self.batch_size, batch_Imagesize=self.batch_Imagesize,
+                                             maxlen=self.maxlen,maxImagesize=self.maxImagesize)
+    def run(self, ind):
+
+        model = self.model
+        sess = self.sess
+        train = np.squeeze(self.train)
+        n_train_img = train.shape[0]
+
+
+        x, x_mask, y, y_mask = prepare_data(train[ind, 0], train[ind, 1])
+        y = np.transpose(y)
+        y_mask = np.transpose(y_mask)
+        total_correct, corrects = sess.run([self.total_correct, self.corrects], feed_dict={model.x: x, model.x_mask: x_mask, model.y: y, \
+                                                   model.y_mask: y_mask, model.is_train: True})
+
+        print(total_correct)
+        print(corrects)
+
+if __name__ == "__main__":
+    train = train_code()
+    ind = 0
+    train.run(ind)
+

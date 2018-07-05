@@ -323,3 +323,29 @@ class MathFormulaRecognizer():
         with tf.variable_scope('Decoder'):
             beta_t, state, out, logit, alpha_t = self.decoding_one_word_validate(beta_t, state, self.out, previous_word, 1)
         return alpha_t, beta_t, state, logit
+
+    def eval_train(self, max_len = 10):
+        beta_t = tf.zeros([self.batch_size, self.feature_size], dtype=tf.float32)
+
+        # c = tf.matmul(self.mean_feature,self.w_init2c) + self.bias_init2c
+        out = tf.nn.tanh(tf.matmul(self.mean_feature, self.w_init2hid) + self.bias_init2hid)
+        c = tf.nn.tanh(tf.matmul(self.mean_feature, self.w_init2c) + self.bias_init2c)
+        state = (c, out)
+        self.in_previous_word = tf.tile(tf.constant([self.start_token, ]), [self.batch_size])
+        previous_word = self.in_previous_word
+        self.debug = out
+        words = []
+        alphas = []
+        betas = []
+        corrects = []
+        total_correct = 0.0
+        with tf.variable_scope('Decoder'):
+            for i in range(0, max_len):
+                # have alpha_t for debugging
+                cur_correct, loss, beta_t, state, out = self.decoding_one_word_train(beta_t, state, out,
+                                                                                     self.y[:, i - 1], i)
+                total_correct = total_correct + cur_correct
+                corrects.append(cur_correct)
+                tf.get_variable_scope().reuse_variables()
+                betas.append(beta_t)
+        return total_correct, alphas, betas, corrects

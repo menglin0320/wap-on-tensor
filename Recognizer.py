@@ -8,7 +8,7 @@ from zone_out_lstm import ZoneoutLSTMCell
 def layer_stack(in_map, n_layers, n_channels, last=False, is_training=True):
     convs = [in_map]
     for i in range(0, n_layers):
-        tf.nn.relu(conv = layers.batch_norm(
+        conv = tf.nn.relu(layers.batch_norm(
             layers.conv2d(convs[-1], num_outputs=n_channels, kernel_size=3, activation_fn=None,
                           stride=1, padding='SAME'), is_training=is_training, decay=0.999))
         convs.append(conv)

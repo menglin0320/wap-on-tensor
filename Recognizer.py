@@ -90,8 +90,8 @@ class MathFormulaRecognizer():
         self.feature_height = tf.shape(self.information_tensor)[1]
         self.feature_width = tf.shape(self.information_tensor)[2]
         self.feature_size = self.feature_height * self.feature_width
-        self.mean_feature = tf.reduce_sum(self.information_tensor, axis=[1, 2])\
-                            /tf.expand_dims(tf.reduce_sum(self.ex_mask,axis = [1, 2]),1)
+        self.mean_feature = tf.divide(tf.reduce_sum(self.information_tensor, axis=[1, 2]),
+                            tf.expand_dims(tf.reduce_sum(self.ex_mask,axis = [1, 2]),1))
         self.vec_mask = tf.reshape(self.ex_mask, [-1, self.feature_size])
 
         with tf.variable_scope('Decoder'):

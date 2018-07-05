@@ -22,11 +22,13 @@ class MathFormulaRecognizer():
     def __init__(self, num_label, dim_hidden):
         # paprameters for the model
         self.x = tf.placeholder(tf.float32, [None, None, None, 1])
-        self.x_mask = tf.placeholder(tf.float32, [None, None, None])
+        self.batch_size = tf.shape(self.x)[0]
+
+        self.x_mask = tf.placeholder(tf.float32, [self.batch_size, None, None])
         self.ex_mask = tf.expand_dims(self.x_mask, 3)
 
-        self.y = tf.placeholder(tf.int32, [None, None])
-        self.y_mask = tf.placeholder(tf.float32, [None, None])
+        self.y = tf.placeholder(tf.int32, [self.batch_size, None])
+        self.y_mask = tf.placeholder(tf.float32, [self.batch_size, None])
         self.seq_length = tf.shape(self.y)[1]
 
         self.initial_lr = 2.

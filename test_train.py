@@ -81,21 +81,21 @@ class eval_train_code:
         x, x_mask, y, y_mask = prepare_data(train[ind, 0], train[ind, 1])
         y = np.transpose(y)
         y_mask = np.transpose(y_mask)
-        x = x[0:1, :, :, :]
-        x_mask = x_mask[0:1, :, :]
-        y = y[0:1, :]
-        y_mask = y_mask[0:1, :]
+        # x = x[0:1, :, :, :]
+        # x_mask = x_mask[0:1, :, :]
+        # y = y[0:1, :]
+        # y_mask = y_mask[0:1, :]
         total_correct, corrects = sess.run([self.total_correct, self.corrects], feed_dict={model.x: x, model.x_mask: x_mask, model.y: y, \
-                                                   model.y_mask: y_mask, model.is_train: True})
+                                                   model.y_mask: y_mask, model.is_train: False})
 
         print(total_correct/np.sum(y_mask))
         print(corrects)
 
 if __name__ == "__main__":
-    # if len(sys.argv) != 2:
-    #     print('please give one arg to specify image batch')
-    # batch_selected = int(sys.argv[1])
-    batch_selected = 2
+    if len(sys.argv) != 2:
+        print('please give one arg to specify image batch')
+    batch_selected = int(sys.argv[1])
+    # batch_selected = 2
     test_obj = eval_train_code(batch_selected)
     test_obj.run(batch_selected)
 

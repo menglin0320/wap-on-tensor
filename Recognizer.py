@@ -93,7 +93,7 @@ class MathFormulaRecognizer():
         self.feature_width = tf.shape(self.information_tensor)[2]
         self.feature_size = self.feature_height * self.feature_width
         self.mean_feature = tf.reduce_sum(self.information_tensor, axis=[1, 2])* 1. / \
-                            tf.tile(tf.expand_dims(tf.reduce_sum(self.ex_mask, axis = [1, 2]), 1), [1,self.latent_depth])
+                            tf.tile(tf.expand_dims(tf.reduce_sum(self.ex_mask, axis = [1, 2, 3]), 1), [1,self.latent_depth])
 
         self.vec_mask = tf.reshape(self.ex_mask, [-1, self.feature_size])
 

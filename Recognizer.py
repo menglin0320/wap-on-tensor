@@ -343,9 +343,10 @@ class MathFormulaRecognizer():
             for i in range(0, max_len):
                 # have alpha_t for debugging
                 cur_correct, loss, beta_t, state, out = self.decoding_one_word_train(beta_t, state, out,
-                                                                                     self.y[:, i - 1], i)
+                                                                                     previous_word, i)
                 total_correct = total_correct + cur_correct
                 corrects.append(cur_correct)
+                previous_word = self.y[:, i]
                 tf.get_variable_scope().reuse_variables()
                 betas.append(beta_t)
         return total_correct, alphas, betas, corrects

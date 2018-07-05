@@ -74,7 +74,7 @@ class train_code:
         y = np.transpose(y)
         y_mask = np.transpose(y_mask)
         total_correct, corrects = sess.run([self.total_correct, self.corrects], feed_dict={model.x: x, model.x_mask: x_mask, model.y: y, \
-                                                   model.y_mask: y_mask, model.is_train: False})
+                                                   model.y_mask: y_mask, model.is_train: True})
 
         print(total_correct/np.sum(y_mask))
         print(corrects)

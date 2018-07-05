@@ -179,7 +179,7 @@ class MathFormulaRecognizer():
         beta_t = beta_t + alpha_t
 
         c = tf.reduce_sum(tf.reshape(self.information_tensor, [-1, self.feature_size, self.latent_depth])
-                          , tf.expand_dims(alpha_t, 2), 1, name='context')
+                          , tf.expand_dims(alpha_t, 2), axis = 1, name='context')
         #     tf.reduce_sum(tf.multiply(
         #     tf.transpose(tf.reshape(self.information_tensor, [-1, self.feature_size, self.latent_depth]), [2, 0, 1]),
         #     alpha_t), axis=-1)

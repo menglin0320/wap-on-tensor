@@ -82,7 +82,7 @@ class train_code:
                 y = np.transpose(y)
                 y_mask = np.transpose(y_mask)
                 _, Loss, Acc = sess.run([self.opt, self.loss, self.acc], feed_dict={model.x: x, model.x_mask: x_mask, model.y: y, \
-                                                           model.y_mask: y_mask, model.is_train: True})
+                                                           model.y_mask: y_mask, model.is_train: False})
                 avg_loss = avg_loss + Loss
                 avg_acc = avg_acc + Acc
                 count = count + 1

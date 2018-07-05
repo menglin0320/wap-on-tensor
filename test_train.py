@@ -87,9 +87,10 @@ class eval_train_code:
         print(corrects)
 
 if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        print('please give one arg to specify image batch')
-    batch_selected = int(sys.argv[1])
+    # if len(sys.argv) != 2:
+    #     print('please give one arg to specify image batch')
+    # batch_selected = int(sys.argv[1])
+    batch_selected = 2
     test_obj = eval_train_code(batch_selected)
     test_obj.run(batch_selected)
 

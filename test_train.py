@@ -39,11 +39,12 @@ class eval_train_code:
         train = np.squeeze(self.train)
         x, x_mask, y, y_mask = prepare_data(train[ind, 0], train[ind, 1])
         y_mask = np.transpose(y_mask)
+        self.start_step = 0
 
         self.total_correct, self.alphas, self.betas, self.corrects = self.model.eval_train(y_mask.shape[1])
         self.saver = tf.train.Saver(max_to_keep=10)
         saved_path = tf.train.latest_checkpoint(checkpoint_dir)
-        self.start_step = 0
+
         if (saved_path):
             # tf.reset_default_graph()
             self.saver.restore(self.sess, saved_path)
@@ -80,6 +81,10 @@ class eval_train_code:
         x, x_mask, y, y_mask = prepare_data(train[ind, 0], train[ind, 1])
         y = np.transpose(y)
         y_mask = np.transpose(y_mask)
+        x = x[0:1, :, :, :]
+        x_mask = x_mask[0:1, :, :]
+        y = y[0:1, :]
+        y_mask = y_mask[0:1, :]
         total_correct, corrects = sess.run([self.total_correct, self.corrects], feed_dict={model.x: x, model.x_mask: x_mask, model.y: y, \
                                                    model.y_mask: y_mask, model.is_train: True})
 

@@ -96,8 +96,7 @@ class test_code:
         # for simplicity only test first image on the batch
         # x = x[0:1, :, :, :]
         # x_mask = x_mask[0:1, :, :]
-        # x = x[0:1, :, :, :]
-        # x_mask = x_mask[0:1, :, :]
+
         Words, Alphas, height, width, Beta = sess.run(
             [self.logits, self.alpha_t, model.feature_height, model.feature_width, self.beta_t],
             feed_dict={model.x: x, model.x_mask: x_mask,

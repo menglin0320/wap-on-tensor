@@ -24,11 +24,11 @@ class MathFormulaRecognizer():
         self.x = tf.placeholder(tf.float32, [None, None, None, 1])
         self.batch_size = tf.shape(self.x)[0]
 
-        self.x_mask = tf.placeholder(tf.float32, [self.batch_size, None, None])
+        self.x_mask = tf.placeholder(tf.float32, [None, None, None])
         self.ex_mask = tf.expand_dims(self.x_mask, 3)
 
-        self.y = tf.placeholder(tf.int32, [self.batch_size, None])
-        self.y_mask = tf.placeholder(tf.float32, [self.batch_size, None])
+        self.y = tf.placeholder(tf.int32, [None, None])
+        self.y_mask = tf.placeholder(tf.float32, [None, None])
         self.seq_length = tf.shape(self.y)[1]
 
         self.initial_lr = 2.
@@ -92,8 +92,8 @@ class MathFormulaRecognizer():
         self.feature_height = tf.shape(self.information_tensor)[1]
         self.feature_width = tf.shape(self.information_tensor)[2]
         self.feature_size = self.feature_height * self.feature_width
-        self.mean_feature = tf.divide(tf.reduce_sum(self.information_tensor, axis=[1, 2]),
-                            tf.expand_dims(tf.reduce_sum(self.ex_mask,axis = [1, 2]),1))
+        self.mean_feature = tf.reduce_sum(self.information_tensor, axis=[1, 2])* 1. / \
+                            tf.expand_dims(tf.reduce_sum(self.ex_mask, axis = [1, 2]), 1)
         self.vec_mask = tf.reshape(self.ex_mask, [-1, self.feature_size])
 
         with tf.variable_scope('Decoder'):

@@ -81,6 +81,6 @@ class train_code:
 
 if __name__ == "__main__":
     train = train_code()
-    ind = 0
+    ind = 1
     train.run(ind)
 

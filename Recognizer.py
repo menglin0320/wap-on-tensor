@@ -299,6 +299,7 @@ class MathFormulaRecognizer():
             for i in range(0, max_len):
                 # have alpha_t for debugging
                 beta_t, state, out, logit, alpha_t = self.decoding_one_word_validate(beta_t, state, out, previous_word, i)
+                tf.get_variable_scope().reuse_variables()
                 words.append(previous_word)
                 previous_word = tf.argmax(logit, 1)
                 alphas.append(alpha_t)

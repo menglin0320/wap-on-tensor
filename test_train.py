@@ -75,7 +75,7 @@ class eval_train_code:
         for kk, vv in worddicts.items():
             worddicts_r[vv] = kk
 
-        self.train, self.train_uid_list, betas = dataIterator(datasets[0], datasets[1],
+        self.train, self.train_uid_list = dataIterator(datasets[0], datasets[1],
                                              worddicts,
                                              batch_size=self.batch_size, batch_Imagesize=self.batch_Imagesize,
                                              maxlen=self.maxlen,maxImagesize=self.maxImagesize)

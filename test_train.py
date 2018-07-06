@@ -16,10 +16,10 @@ def attention_on_origin(attention, im):
     return ret
 
 class eval_train_code:
-    def __init__(self, ind):
+    def __init__(self, ind, chosen_set):
         self.config_initialize()
         self.load_data()
-        self.initialize_model(ind)
+        self.initialize_model(ind, chosen_set)
 
 
     def config_initialize(self):
@@ -40,13 +40,17 @@ class eval_train_code:
         self.maxlen = 200
         self.n_epoch = 10000
 
-    def initialize_model(self, ind):
+    def initialize_model(self, ind, chosen_set):
         checkpoint_dir = self.checkpoint_dir
         self.sess = tf.Session()
         self.model = MathFormulaRecognizer(num_label=112, dim_hidden=128)
 
         train = np.squeeze(self.train)
-        x, x_mask, y, y_mask = prepare_data(train[ind, 0], train[ind, 1])
+        valid = np.squeeze(self.valid)
+        if chosen_set == 'train':
+            x, x_mask, y, y_mask = prepare_data(train[ind, 0], train[ind, 1])
+        else:
+            x, x_mask, y, y_mask = prepare_data(valid[ind, 0], valid[ind, 1])
         y_mask = np.transpose(y_mask)
         self.start_step = 0
 
@@ -116,7 +120,8 @@ if __name__ == "__main__":
         raise ValueError('please give one arg to specify image batch')
     batch_selected = int(sys.argv[1])
     chosen_set = sys.argv[2]
-    # batch_selected = 2
-    test_obj = eval_train_code(batch_selected)
+    # batch_selected = 30
+    # chosen_set = 'valid'
+    test_obj = eval_train_code(batch_selected, chosen_set)
     test_obj.run(batch_selected, chosen_set)
 

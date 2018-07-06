@@ -92,7 +92,10 @@ class test_code:
         train = np.squeeze(train)
         sess = self.sess
         model = self.model
-        x, x_mask, y, y_mask = prepare_data(train[batch_picked, 0], train[batch_picked, 1])
+        if chosen_set == 'train':
+            x, x_mask, y, y_mask = prepare_data(train[batch_picked, 0], train[batch_picked, 1])
+        else:
+            x, x_mask, y, y_mask = prepare_data(valid[batch_picked, 0], valid[batch_picked, 1])
         # for simplicity only test first image on the batch
         x = x[0:1, :, :, :]
         x_mask = x_mask[0:1, :, :]
@@ -122,11 +125,12 @@ class test_code:
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        print('please give one arg to specify image batch')
+    if len(sys.argv) != 3:
+        raise ValueError('please give one arg to specify image batch')
     batch_selected = int(sys.argv[1])
+    chosen_set = sys.argv[2]
     test_obj = test_code()
-    latex_ret, im, with_atts = test_obj.run(batch_selected)
+    latex_ret, im, with_atts = test_obj.run(batch_selected, chosen_set)
     cv2.imwrite('test_out.png', im * 255)
     for i in range(0, 10):
         cv2.imwrite('with_att' + str(i) + '.png', with_atts[i] * 255)

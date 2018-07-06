@@ -6,6 +6,15 @@ from util import *
 from data_iterator import dataIterator
 
 import sys
+import cv2
+
+def attention_on_origin(attention, im):
+    height, width = im.shape
+    aug_attention = cv2.resize(attention, (width, height))
+    ret = np.zeros((height, width))
+    ret = cv2.normalize(im + aug_attention, ret, alpha=0, beta=1, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_32F)
+    return ret
+
 class eval_train_code:
     def __init__(self, ind):
         self.config_initialize()
@@ -66,7 +75,7 @@ class eval_train_code:
         for kk, vv in worddicts.items():
             worddicts_r[vv] = kk
 
-        self.train, self.train_uid_list = dataIterator(datasets[0], datasets[1],
+        self.train, self.train_uid_list, betas = dataIterator(datasets[0], datasets[1],
                                              worddicts,
                                              batch_size=self.batch_size, batch_Imagesize=self.batch_Imagesize,
                                              maxlen=self.maxlen,maxImagesize=self.maxImagesize)
@@ -85,9 +94,11 @@ class eval_train_code:
         # x_mask = x_mask[0:1, :, :]
         # y = y[0:1, :]
         # y_mask = y_mask[0:1, :]
-        total_correct, corrects = sess.run([self.total_correct, self.corrects], feed_dict={model.x: x, model.x_mask: x_mask, model.y: y, \
+        total_correct, corrects, betas, height,  width = sess.run([self.total_correct, self.corrects, self.betas, model.feature_height, model.feature_width], feed_dict={model.x: x, model.x_mask: x_mask, model.y: y, \
                                                    model.y_mask: y_mask, model.is_train: False})
-
+        for i in range(0, 10):
+            with_att = attention_on_origin(np.reshape(betas[i], (height, width, 1)), np.squeeze(x[0]))
+            cv2.imwrite('with_att' + str(i) + '.png', with_att * 255)
         print(total_correct/np.sum(y_mask))
         print(corrects)
 

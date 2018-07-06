@@ -67,6 +67,8 @@ class eval_train_code:
     def load_data(self):
         datasets = ['./data/offline-train.pkl',
                     './data/train_caption.txt']
+        valid_datasets = ['./data/offline-test.pkl',
+                               './data/test_caption.txt']
         dictionaries = ['./data/dictionary.txt']
 
         worddicts = load_dict(dictionaries[0])
@@ -79,15 +81,22 @@ class eval_train_code:
                                              worddicts,
                                              batch_size=self.batch_size, batch_Imagesize=self.batch_Imagesize,
                                              maxlen=self.maxlen,maxImagesize=self.maxImagesize)
-    def run(self, ind):
+        self.valid, self.valid_uid_list = dataIterator(valid_datasets[0], valid_datasets[1],
+                                         worddicts,
+                                         batch_size=self.batch_size, batch_Imagesize=self.batch_Imagesize,
+                                         maxlen=self.maxlen, maxImagesize=self.maxImagesize)
+    def run(self, ind, chosen_set):
 
         model = self.model
         sess = self.sess
         train = np.squeeze(self.train)
+        valid = np.squeeze(self.valid)
         n_train_img = train.shape[0]
 
-
-        x, x_mask, y, y_mask = prepare_data(train[ind, 0], train[ind, 1])
+        if chosen_set == 'train':
+            x, x_mask, y, y_mask = prepare_data(train[ind, 0], train[ind, 1])
+        else:
+            x, x_mask, y, y_mask = prepare_data(valid[ind, 0], valid[ind, 1])
         y = np.transpose(y)
         y_mask = np.transpose(y_mask)
         # x = x[0:1, :, :, :]
@@ -103,10 +112,11 @@ class eval_train_code:
         print(corrects)
 
 if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        print('please give one arg to specify image batch')
+    if len(sys.argv) != 3:
+        raise ValueError('please give one arg to specify image batch')
     batch_selected = int(sys.argv[1])
+    chosen_set = sys.argv[2]
     # batch_selected = 2
     test_obj = eval_train_code(batch_selected)
-    test_obj.run(batch_selected)
+    test_obj.run(batch_selected, chosen_set)
 

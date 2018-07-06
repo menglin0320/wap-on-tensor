@@ -332,7 +332,7 @@ class MathFormulaRecognizer():
         with tf.variable_scope('Decoder'):
             beta_t, state, out, logit, alpha_t = self.decoding_one_word_validate(beta_t, state, self.out, previous_word,
                                                                                  1)
-        return alpha_t, beta_t, state, logit
+        return alpha_t, beta_t, state, out, logit
 
     def eval_train(self, max_len=10):
         beta_t = tf.zeros([self.batch_size, self.feature_size], dtype=tf.float32)

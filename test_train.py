@@ -97,7 +97,7 @@ class eval_train_code:
         total_correct, corrects, betas, height,  width = sess.run([self.total_correct, self.corrects, self.betas, model.feature_height, model.feature_width], feed_dict={model.x: x, model.x_mask: x_mask, model.y: y, \
                                                    model.y_mask: y_mask, model.is_train: False})
         for i in range(0, 10):
-            with_att = attention_on_origin(np.reshape(betas[i], (height, width, 1)), np.squeeze(x[0]))
+            with_att = attention_on_origin(np.reshape(betas[i][0], (height, width, 1)), np.squeeze(x[0]))
             cv2.imwrite('with_att' + str(i) + '.png', with_att * 255)
         print(total_correct/np.sum(y_mask))
         print(corrects)

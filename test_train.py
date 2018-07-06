@@ -28,7 +28,7 @@ class eval_train_code:
         self.checkpoint_dir = os.path.join(self.home_path, 'save')
         self.max_iters = 100000
         self.batch_size = 16
-        self.valid_batch_size = 8
+        self.valid_batch_size = 16
         # Evaluation Checkpoint
         self.nEvaImages = 300
         self.EvaEach = 2500
@@ -106,7 +106,7 @@ class eval_train_code:
         total_correct, corrects, betas, height,  width = sess.run([self.total_correct, self.corrects, self.betas, model.feature_height, model.feature_width], feed_dict={model.x: x, model.x_mask: x_mask, model.y: y, \
                                                    model.y_mask: y_mask, model.is_train: False})
         for i in range(0, y.shape[1]):
-            with_att = attention_on_origin(np.reshape(betas[i][1], (height, width, 1)), np.squeeze(x[1]))
+            with_att = attention_on_origin(np.reshape(betas[i][0], (height, width, 1)), np.squeeze(x[0]))
             cv2.imwrite('with_att' + str(i) + '.png', with_att * 255)
         print(total_correct/np.sum(y_mask))
         print(corrects)

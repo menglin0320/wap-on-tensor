@@ -83,7 +83,7 @@ class test_code:
                                 batch_size=self.batch_size, batch_Imagesize=self.batch_Imagesize,
                                 maxlen=self.maxlen, maxImagesize=self.maxImagesize)
 
-    def run(self, batch_picked):
+    def run(self, batch_picked, chosen_set):
         # This code assumes that at least one character in the list
         # is recognized
         train, train_uid_list = self.get_data('train')

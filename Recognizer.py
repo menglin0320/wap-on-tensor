@@ -173,10 +173,6 @@ class MathFormulaRecognizer():
         weighted_f = self.project_features(F, 'f')
         SUM = tf.add(tf.add(tf.expand_dims(weighted_h, 1), weighted_annotation),
                      weighted_f)  # (batch_size,feature_size,attention_dimension)
-        if i == 0:
-            self.weighted_h = weighted_h
-            self.weighted_annotation = weighted_annotation
-            self.weighted_f = weighted_f
 
         e = tf.matmul(tf.nn.tanh(tf.reshape(SUM, [-1, self.attention_dimension])),
                       self.w_2e) + self.bias_2e  # (batch_size*feature_size)
@@ -232,10 +228,6 @@ class MathFormulaRecognizer():
         weighted_f = self.project_features(F, 'f')
         SUM = tf.add(tf.add(tf.expand_dims(weighted_h, 1), weighted_annotation),
                      weighted_f)  # (batch_size,feature_size,attention_dimension)
-        if i == 0:
-            self.weighted_h = weighted_h
-            self.weighted_annotation = weighted_annotation
-            self.weighted_f = weighted_f
 
         e = tf.matmul(tf.nn.tanh(tf.reshape(SUM, [-1, self.attention_dimension])),
                       self.w_2e) + self.bias_2e  # (batch_size*feature_size)

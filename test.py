@@ -109,7 +109,7 @@ class test_code:
 
             tAlpha, tBeta, tState, tLogit = sess.run([self.alpha_t, self.beta_t, self.state, self.logit], feed_dict=
             {model.information_tensor: information_tensor, model.vec_mask: vec_mask,
-             model.in_beta_t: Beta, model.in_state: State,
+             model.in_beta_t: Beta, model.c:State[0], model.out: State[1],
              model.in_previous_word: previous_word, model.is_train: False})
 
             orders = np.argsort(tLogit[0])[::-1]
@@ -143,7 +143,7 @@ class test_code:
                 State = cur_beam[i][2]
                 tAlpha, tBeta, tState, tLogit = sess.run([self.alpha_t, self.beta_t, self.state, self.logit], feed_dict=
                 {model.information_tensor: information_tensor, model.vec_mask: vec_mask,
-                 model.in_beta_t: Beta, model.in_state: State,
+                 model.in_beta_t: Beta, model.c:State[0], model.out: State[1],
                  model.in_previous_word: previous_word, model.is_train: False})
                 orders = np.argsort(tLogit[0])[::-1]
                 tprobs = softmax(tLogit[0])

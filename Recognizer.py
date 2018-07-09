@@ -236,10 +236,8 @@ class MathFormulaRecognizer():
         alpha_t = alpha_t / tf.expand_dims(tf.reduce_sum(alpha_t, axis=-1), 1)
         beta_t = beta_t + alpha_t
 
-        c = tf.reduce_sum(tf.multiply(
-            tf.transpose(tf.reshape(self.information_tensor, [-1, self.feature_size, self.latent_depth]), [2, 0, 1]),
-            alpha_t), axis=-1)
-        c = tf.transpose(c, [1, 0])
+        c = tf.reduce_sum(tf.reshape(self.information_tensor, [-1, self.feature_size, self.latent_depth])
+                          * tf.expand_dims(alpha_t, 2), axis=1, name='context')
 
         word_embedding = tf.nn.embedding_lookup(self.w_embedding, previous_vec) + self.bias_embedding
         gru_in = tf.concat([c, word_embedding], axis=1)

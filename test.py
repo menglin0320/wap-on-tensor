@@ -53,7 +53,7 @@ class test_code:
 
     def load_model(self):
         self.model = MathFormulaRecognizer(num_label=112, dim_hidden=128)
-        self.alpha_t, self.beta_t, self.state, self.logit = self.model.build_eval()
+        self.alpha_t, self.beta_t, self.state, self.out, self.logit = self.model.build_eval()
         saver = tf.train.Saver(max_to_keep=10)
         self.sess = tf.Session()
         saved_path = tf.train.latest_checkpoint(self.checkpoint_path)
@@ -73,7 +73,7 @@ class test_code:
                                 batch_size=self.batch_size, batch_Imagesize=self.batch_Imagesize,
                                 maxlen=self.maxlen, maxImagesize=self.maxImagesize)
 
-    def run(self, batch_picked):
+    def run(self, batch_picked, chosen_set):
         # This code assumes that at least one character in the list
         # is recognized
         train, train_uid_list = self.get_data('train')
@@ -82,7 +82,11 @@ class test_code:
         train = np.squeeze(train)
         sess = self.sess
         model = self.model
-        x, x_mask, y, y_mask = prepare_data(valid[batch_picked, 0], valid[batch_picked, 1])
+        if chosen_set == 'train':
+            x, x_mask, y, y_mask = prepare_data(train[batch_picked, 0], train[batch_picked, 1])
+        else:
+            x, x_mask, y, y_mask = prepare_data(valid[batch_picked, 0], valid[batch_picked, 1])
+
         # for simplicity only test first image on the batch
         x = x[0:1, :, :, :]
         x_mask = x_mask[0:1, :, :]
@@ -91,7 +95,7 @@ class test_code:
 
         # on first iteration just pick the top n_cand candidates
         Alpha, Beta, State, Logit, information_tensor, vec_mask = sess.run(
-            [self.alpha_t, self.beta_t, self.state, self.logit, model.information_tensor, model.vec_mask],
+            [self.alpha_t, self.beta_t, self.state,  self.logit, model.information_tensor, model.vec_mask],
             feed_dict={model.x: x, model.x_mask: x_mask, model.is_train: False})
         orders = np.argsort(Logit[0])[::-1]
         probs = softmax(Logit[0])
@@ -163,10 +167,12 @@ class test_code:
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        print('please give one arg to specify image batch')
+    if len(sys.argv) != 3:
+        print(sys.argv)
+        raise ValueError('please give two args to specify image batch and set')
     batch_selected = int(sys.argv[1])
+    chosen_set = sys.argv[2]
     test_obj = test_code()
-    latex_ret, im = test_obj.run(batch_selected)
+    latex_ret, im = test_obj.run(batch_selected, chosen_set)
     cv2.imwrite('test_out.png', im * 255)
     print(latex_ret)

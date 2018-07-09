@@ -321,16 +321,16 @@ class MathFormulaRecognizer():
         beta_t = self.in_beta_t
 
         self.out = tf.nn.tanh(tf.matmul(self.mean_feature, self.w_init2hid) + self.bias_init2hid)
-        c = tf.nn.tanh(tf.matmul(self.mean_feature, self.w_init2c) + self.bias_init2c)
-        self.in_state = (c, self.out)
+        self.c = tf.nn.tanh(tf.matmul(self.mean_feature, self.w_init2c) + self.bias_init2c)
+        self.in_state = (self.c, self.out)
         # c = tf.matmul(self.mean_feature,self.w_init2c) + self.bias_init2c
         state = self.in_state
-
+        out = state[1]
         self.in_previous_word = tf.tile(tf.constant([111, ]), [self.batch_size])
         previous_word = self.in_previous_word
 
         with tf.variable_scope('Decoder'):
-            beta_t, state, out, logit, alpha_t = self.decoding_one_word_validate(beta_t, state, self.out, previous_word,
+            beta_t, state, out, logit, alpha_t = self.decoding_one_word_validate(beta_t, state, out, previous_word,
                                                                                  1)
         return alpha_t, beta_t, state, out, logit
 

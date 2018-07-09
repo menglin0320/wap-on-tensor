@@ -170,7 +170,7 @@ class MathFormulaRecognizer():
         weighted_h = tf.matmul(out, self.w_hidden) + self.bias_hidden
 
         weighted_annotation = self.project_features(self.information_tensor, 'feature')
-        weighted_f = self.project_features(F, 'F')
+        weighted_f = self.project_features(F, 'f')
         SUM = tf.add(tf.add(tf.expand_dims(weighted_h, 1), weighted_annotation),
                      weighted_f)  # (batch_size,feature_size,attention_dimension)
         if i == 0:

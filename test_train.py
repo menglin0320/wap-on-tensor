@@ -108,8 +108,8 @@ class eval_train_code:
         x_mask = x_mask[0:1, :, :]
         y = y[0:1, :]
         y_mask = y_mask[0:1, :]
-        first_state, total_correct, corrects, betas, height, width = sess.run(
-            [model.state, self.total_correct, self.corrects, self.betas, model.feature_height, model.feature_width], \
+        sum, total_correct, corrects, betas, height, width = sess.run(
+            [model.SUM, self.total_correct, self.corrects, self.betas, model.feature_height, model.feature_width], \
             feed_dict={model.x: x, model.x_mask: x_mask, model.y: y, \
                        model.y_mask: y_mask, model.is_train: False})
         for i in range(0, y.shape[1]):
@@ -118,8 +118,7 @@ class eval_train_code:
         print(total_correct / np.sum(y_mask))
         print(corrects)
         print(y)
-        print(first_state)
-
+        print(sum)
 if __name__ == "__main__":
     if len(sys.argv) != 3:
         raise ValueError('please give one arg to specify image batch')

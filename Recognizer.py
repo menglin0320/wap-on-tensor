@@ -173,6 +173,8 @@ class MathFormulaRecognizer():
         weighted_f = self.project_features(F, 'F')
         SUM = tf.add(tf.add(tf.expand_dims(weighted_h, 1), weighted_annotation),
                      weighted_f)  # (batch_size,feature_size,attention_dimension)
+        if i == 0:
+            self.SUM = SUM
         e = tf.matmul(tf.nn.tanh(tf.reshape(SUM, [-1, self.attention_dimension])),
                       self.w_2e) + self.bias_2e  # (batch_size*feature_size)
         e = tf.reshape(e, [-1, self.feature_size])  # (batch_size,feature_size)
@@ -227,6 +229,8 @@ class MathFormulaRecognizer():
         weighted_f = self.project_features(F, 'f')
         SUM = tf.add(tf.add(tf.expand_dims(weighted_h, 1), weighted_annotation),
                      weighted_f)  # (batch_size,feature_size,attention_dimension)
+        if i == 0:
+            self.SUM = SUM
         e = tf.matmul(tf.nn.tanh(tf.reshape(SUM, [-1, self.attention_dimension])),
                       self.w_2e) + self.bias_2e  # (batch_size*feature_size)
         e = tf.reshape(e, [-1, self.feature_size])  # (batch_size,feature_size)
@@ -314,10 +318,8 @@ class MathFormulaRecognizer():
         out = tf.nn.tanh(tf.matmul(self.mean_feature, self.w_init2hid) + self.bias_init2hid)
         c = tf.nn.tanh(tf.matmul(self.mean_feature, self.w_init2c) + self.bias_init2c)
         state = (c, out)
-        self.state = state
         self.in_previous_word = tf.tile(tf.constant([self.start_token, ]), [self.batch_size])
         previous_word = self.in_previous_word
-        self.debug = out
         words = []
         alphas = []
         betas = []
@@ -342,8 +344,6 @@ class MathFormulaRecognizer():
         state = (c, out)
         self.in_previous_word = tf.tile(tf.constant([self.start_token, ]), [self.batch_size])
         previous_word = self.in_previous_word
-        self.debug = out
-        self.state = state
         alphas = []
         betas = []
         corrects = []

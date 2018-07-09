@@ -100,8 +100,8 @@ class test_code:
         x = x[0:1, :, :, :]
         x_mask = x_mask[0:1, :, :]
 
-        sum, Words, Alphas, height, width, Beta = sess.run(
-            [model.SUM, self.logits, self.alpha_t, model.feature_height, model.feature_width, self.beta_t],
+        weighted_h,weighted_annotation,weighted_f, Words, Alphas, height, width, Beta = sess.run(
+            [model.weighted_h, model.weighted_annotation,model.weighted_f, self.logits, self.alpha_t, model.feature_height, model.feature_width, self.beta_t],
             feed_dict={model.x: x, model.x_mask: x_mask,
                        model.is_train: False})
 
@@ -116,7 +116,9 @@ class test_code:
         print(str)
         print(height)
         print(width)
-        print(sum)
+        print(weighted_h)
+        print(weighted_annotation)
+        print(weighted_f)
         with_atts = []
         for i in range(0, 10):
             with_att = attention_on_origin(np.reshape(Beta[i], (height, width, 1)), np.squeeze(x[0]))

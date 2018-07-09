@@ -100,8 +100,8 @@ class test_code:
         x = x[0:1, :, :, :]
         x_mask = x_mask[0:1, :, :]
 
-        Words, Alphas, height, width, Beta = sess.run(
-            [self.logits, self.alpha_t, model.feature_height, model.feature_width, self.beta_t],
+        first_state, Words, Alphas, height, width, Beta = sess.run(
+            [model.state, self.logits, self.alpha_t, model.feature_height, model.feature_width, self.beta_t],
             feed_dict={model.x: x, model.x_mask: x_mask,
                        model.is_train: False})
 
@@ -116,6 +116,7 @@ class test_code:
         print(str)
         print(height)
         print(width)
+        print(first_state)
         with_atts = []
         for i in range(0, 10):
             with_att = attention_on_origin(np.reshape(Beta[i], (height, width, 1)), np.squeeze(x[0]))

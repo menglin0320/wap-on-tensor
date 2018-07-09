@@ -126,7 +126,7 @@ class test_code:
 
 if __name__ == "__main__":
     if len(sys.argv) != 3:
-        raise ValueError('please give one arg to specify image batch')
+        raise ValueError('please give two args to specify image batch and set')
     batch_selected = int(sys.argv[1])
     chosen_set = sys.argv[2]
     test_obj = test_code()

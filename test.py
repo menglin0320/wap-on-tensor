@@ -7,6 +7,12 @@ from Recognizer import MathFormulaRecognizer
 from data_iterator import dataIterator
 from util import *
 
+def attention_on_origin(attention, im):
+    height, width = im.shape
+    aug_attention = cv2.resize(attention, (width, height))
+    ret = np.zeros((height, width))
+    ret = cv2.normalize(im + aug_attention, ret, alpha=0, beta=1, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_32F)
+    return ret
 
 def softmax(x):
     return np.exp(x) / np.sum(np.exp(x), axis=0)
@@ -90,13 +96,15 @@ class test_code:
         # for simplicity only test first image on the batch
         x = x[0:1, :, :, :]
         x_mask = x_mask[0:1, :, :]
-
+        im = np.squeeze(x[0])
         n_cand = 5
 
         # on first iteration just pick the top n_cand candidates
-        Alpha, Beta, State, Logit, information_tensor, vec_mask = sess.run(
-            [self.alpha_t, self.beta_t, self.state,  self.logit, model.information_tensor, model.vec_mask],
+        Alpha, Beta, State, Logit, information_tensor, vec_mask, height, width = sess.run(
+            [self.alpha_t, self.beta_t, self.state,  self.logit, model.information_tensor, model.vec_mask, model.feature_height, model.feature_width],
             feed_dict={model.x: x, model.x_mask: x_mask, model.is_train: False})
+        with_att = attention_on_origin(np.reshape(Alpha, (height, width, 1)), im)
+        cv2.imwrite('with_att' + str(0) + '_' + str(0) + '.png', with_att * 255)
         orders = np.argsort(Logit[0])[::-1]
         probs = softmax(Logit[0])
         inds = orders[0:n_cand]
@@ -111,6 +119,9 @@ class test_code:
             {model.information_tensor: information_tensor, model.vec_mask: vec_mask,
              model.in_beta_t: Beta, model.c:State[0], model.out: State[1],
              model.in_previous_word: previous_word, model.is_train: False})
+
+            with_att = attention_on_origin(np.reshape(tAlpha, (height, width, 1)), im)
+            cv2.imwrite('with_att' + str(1) + '_' + str(i) + '.png', with_att * 255)
 
             orders = np.argsort(tLogit[0])[::-1]
             tprobs = softmax(tLogit[0])
@@ -146,6 +157,10 @@ class test_code:
                 {model.information_tensor: information_tensor, model.vec_mask: vec_mask,
                  model.in_beta_t: Beta, model.c:State[0], model.out: State[1],
                  model.in_previous_word: previous_word, model.is_train: False})
+
+                with_att = attention_on_origin(np.reshape(tAlpha, (height, width, 1)), im)
+                cv2.imwrite('with_att' + str(iter_num-1) + '_' + str(i) + '.png', with_att * 255)
+
                 orders = np.argsort(tLogit[0])[::-1]
                 tprobs = softmax(tLogit[0])
                 inds = orders[0:5]

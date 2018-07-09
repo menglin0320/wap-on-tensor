@@ -103,10 +103,10 @@ class eval_train_code:
             x, x_mask, y, y_mask = prepare_data(valid[ind, 0], valid[ind, 1])
         y = np.transpose(y)
         y_mask = np.transpose(y_mask)
-        # x = x[0:1, :, :, :]
-        # x_mask = x_mask[0:1, :, :]
-        # y = y[0:1, :]
-        # y_mask = y_mask[0:1, :]
+        x = x[0:1, :, :, :]
+        x_mask = x_mask[0:1, :, :]
+        y = y[0:1, :]
+        y_mask = y_mask[0:1, :]
         total_correct, corrects, betas, height,  width = sess.run([self.total_correct, self.corrects, self.betas, model.feature_height, model.feature_width], feed_dict={model.x: x, model.x_mask: x_mask, model.y: y, \
                                                    model.y_mask: y_mask, model.is_train: False})
         for i in range(0, y.shape[1]):

@@ -114,6 +114,7 @@ class eval_train_code:
             cv2.imwrite('with_att' + str(i) + '.png', with_att * 255)
         print(total_correct/np.sum(y_mask))
         print(corrects)
+        print(y)
 
 if __name__ == "__main__":
     if len(sys.argv) != 3:

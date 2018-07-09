@@ -125,6 +125,7 @@ class test_code:
         finish_flag = False
         latex_array = ''
         for j in range(0, 5):
+            print(cur_beam[j][3])
             if (cur_beam[j][3][1] == 0):
                 latex_array = cur_beam[j][3]
                 finish_flag = True

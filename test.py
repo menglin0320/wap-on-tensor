@@ -170,14 +170,14 @@ class test_code:
                 break
             str_list.append(self.worddicts_r[chosen_beam[i]])
         print('translated string: ', ''.join(str_list))
-        for i in range(0, max(5,len(sorted_cands))):
+        for i in range(1, min(3,len(sorted_cands))):
             cur_beam = sorted_cands[i][0]
             for j in range(0, len(cur_beam)):
-                if chosen_beam[i] == 0:
+                if chosen_beam[j] == 0:
                     break
-                str_list.append(self.worddicts_r[cur_beam[i]])
+                str_list.append(self.worddicts_r[cur_beam[j]])
 
-        print('top cands' + str(i) + ':', ''.join(str_list))
+            print('top cands' + str(i) + ':', ''.join(str_list))
 
 
         return chosen_beam, np.squeeze(x[0])

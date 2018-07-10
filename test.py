@@ -126,8 +126,8 @@ class test_code:
                         probs = softmax(Logit[0])
                         inds = orders[0:5]
                         ordered_probs = np.log(probs[inds])
-                        with_att = attention_on_origin(np.reshape(Alpha, (height, width, 1)), im)
-                        cv2.imwrite('with_att' + str(i) + '_' + str(j) + '.png', with_att * 255)
+                        # with_att = attention_on_origin(np.reshape(Alpha, (height, width, 1)), im)
+                        # cv2.imwrite('with_att' + str(i) + '_' + str(j) + '.png', with_att * 255)
                         for z in range(0, n_cand):
                             temp_structure.append([np.copy(Alpha), np.copy(Beta), np.copy(State), cur_beam[j][3] + [inds[z]], ordered_probs[z] + cur_beam[j][4]])
             sorted_beams = sorted(temp_structure, key=lambda x: x[4], reverse=True)

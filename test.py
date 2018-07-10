@@ -166,8 +166,20 @@ class test_code:
         chosen_beam = sorted_cands[0][0]
         str_list = []
         for i in range(0, len(chosen_beam)):
+            if chosen_beam[i] == 0:
+                break
             str_list.append(self.worddicts_r[chosen_beam[i]])
-        print(''.join(str_list))
+        print('translated string: ', ''.join(str_list))
+        for i in range(0, max(5,len(sorted_cands))):
+            cur_beam = sorted_cands[i][0]
+            for j in range(0, len(cur_beam)):
+                if chosen_beam[i] == 0:
+                    break
+                str_list.append(self.worddicts_r[cur_beam[i]])
+
+        print('top cands' + str(i) + ':', ''.join(str_list))
+
+
         return chosen_beam, np.squeeze(x[0])
 
 

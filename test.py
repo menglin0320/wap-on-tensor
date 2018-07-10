@@ -79,6 +79,73 @@ class test_code:
                                 batch_size=self.batch_size, batch_Imagesize=self.batch_Imagesize,
                                 maxlen=self.maxlen, maxImagesize=self.maxImagesize)
 
+    def get_all_candidates(self, model, sess, x, x_mask, n_cand = 5, max_len = 100):
+        full_beam = []
+        x = x[0:1, :, :, :]
+        x_mask = x_mask[0:1, :, :]
+        im = np.squeeze(x[0])
+
+        cur_beam = []
+        ignore = []
+        # TODO this is just for initialization, there should be a
+        # more elegant walk around
+        vec_mask = 0
+        information_tensor = 0
+        height = 0
+        width = 0
+        for i in range(0, max_len):
+            temp_structure = []
+            if i == 0:
+                Alpha, Beta, State, Logit, information_tensor, vec_mask, height, width = sess.run(
+                [self.alpha_t, self.beta_t, self.state, self.logit, model.information_tensor, model.vec_mask,
+                 model.feature_height, model.feature_width],
+                feed_dict={model.x: x, model.x_mask: x_mask, model.is_train: False})
+                orders = np.argsort(Logit[0])[::-1]
+                probs = softmax(Logit[0])
+                inds = orders[0:5]
+                ordered_probs = np.log(probs[inds])
+
+                for z in range(0, n_cand):
+                    temp_structure.append([np.copy(Alpha), np.copy(Beta), np.copy(State), [inds[z]],
+                                           ordered_probs[z]])
+            else:
+                for j in range(0, n_cand):
+                    if not j in ignore:
+                        previous_word = np.expand_dims(np.asarray(cur_beam[j][3][i - 1]), 0)
+                        Beta = cur_beam[j][1]
+                        State = cur_beam[j][2]
+                        Alpha, Beta, State, Logit = sess.run([self.alpha_t, self.beta_t, self.state, self.logit],
+                                                                 feed_dict=
+                                                                 {model.information_tensor: information_tensor,
+                                                                  model.vec_mask: vec_mask,
+                                                                  model.in_beta_t: Beta, model.c: State[0],
+                                                                  model.out: State[1],
+                                                                  model.in_previous_word: previous_word,
+                                                                  model.is_train: False})
+                        orders = np.argsort(Logit[0])[::-1]
+                        probs = softmax(Logit[0])
+                        inds = orders[0:5]
+                        ordered_probs = np.log(probs[inds])
+                        with_att = attention_on_origin(np.reshape(Alpha, (height, width, 1)), im)
+                        cv2.imwrite('with_att' + str(i) + '_' + str(j) + '.png', with_att * 255)
+                        for z in range(0, n_cand):
+                            temp_structure.append([np.copy(Alpha), np.copy(Beta), np.copy(State), cur_beam[j][3] + [inds[z]], ordered_probs[z] + cur_beam[j][4]])
+            sorted_beams = sorted(temp_structure, key=lambda x: x[4], reverse=True)
+            cur_beam = sorted_beams[0:5]
+            ignore = []
+            if i == 0:
+                ignore = np.arange(5)[1:]
+            else:
+                for j in range(0, n_cand):
+                    if (cur_beam[j][3][i] == 0):
+                        full_beam.append([cur_beam[j][3], cur_beam[j][4] / len(cur_beam[j][3])])
+                        ignore.append(i)
+                        break
+            if len(ignore) == n_cand:
+                return full_beam
+        return full_beam
+
+
     def run(self, batch_picked, chosen_set):
         # This code assumes that at least one character in the list
         # is recognized
@@ -94,92 +161,14 @@ class test_code:
             x, x_mask, y, y_mask = prepare_data(valid[batch_picked, 0], valid[batch_picked, 1])
 
         # for simplicity only test first image on the batch
-        x = x[0:1, :, :, :]
-        x_mask = x_mask[0:1, :, :]
-        im = np.squeeze(x[0])
-        n_cand = 5
-
-        # on first iteration just pick the top n_cand candidates
-        Alpha, Beta, State, Logit, information_tensor, vec_mask, height, width = sess.run(
-            [self.alpha_t, self.beta_t, self.state,  self.logit, model.information_tensor, model.vec_mask, model.feature_height, model.feature_width],
-            feed_dict={model.x: x, model.x_mask: x_mask, model.is_train: False})
-        with_att = attention_on_origin(np.reshape(Alpha, (height, width, 1)), im)
-        cv2.imwrite('with_att' + str(0) + '_' + str(0) + '.png', with_att * 255)
-        orders = np.argsort(Logit[0])[::-1]
-        probs = softmax(Logit[0])
-        inds = orders[0:n_cand]
-        probs = np.log(probs[inds])
-        result = [[ind] for ind in inds]
-        # second iteration
-        temp_structure = []
-        for i in range(0, 5):
-            previous_word = np.expand_dims(np.asarray(result[i][0]), 0)
-
-            tAlpha, tBeta, tState, tLogit = sess.run([self.alpha_t, self.beta_t, self.state, self.logit], feed_dict=
-            {model.information_tensor: information_tensor, model.vec_mask: vec_mask,
-             model.in_beta_t: Beta, model.c:State[0], model.out: State[1],
-             model.in_previous_word: previous_word, model.is_train: False})
-
-            with_att = attention_on_origin(np.reshape(tAlpha, (height, width, 1)), im)
-            cv2.imwrite('with_att' + str(1) + '_' + str(i) + '.png', with_att * 255)
-
-            orders = np.argsort(tLogit[0])[::-1]
-            tprobs = softmax(tLogit[0])
-            inds = orders[0:5]
-            tprobs = np.log(tprobs[inds])
-            #     print(tprobs)
-            for j in range(0, 5):
-                temp_structure.append(
-                    [np.copy(tAlpha), np.copy(tBeta), np.copy(tState), result[i] + [inds[j]], tprobs[j] + probs[i]])
-        a = sorted(temp_structure, key=lambda x: x[4], reverse=True)
-        cur_beam = a[0:5]
-        finish_flag = False
-        latex_array = ''
-        for j in range(0, 5):
-            print(cur_beam[j][3])
-            if (cur_beam[j][3][1] == 0):
-                latex_array = cur_beam[j][3]
-                finish_flag = True
-                break
-        iter_num = 2
-        # following iterations
-        while (True):
-            temp_structure = []
-            iter_num += 1
-            if finish_flag:
-                break
-            for i in range(0, 5):
-                previous_word = np.expand_dims(np.asarray(cur_beam[i][3][iter_num - 2]), 0)
-                Alpha = cur_beam[i][0]
-                Beta = cur_beam[i][1]
-                State = cur_beam[i][2]
-                tAlpha, tBeta, tState, tLogit = sess.run([self.alpha_t, self.beta_t, self.state, self.logit], feed_dict=
-                {model.information_tensor: information_tensor, model.vec_mask: vec_mask,
-                 model.in_beta_t: Beta, model.c:State[0], model.out: State[1],
-                 model.in_previous_word: previous_word, model.is_train: False})
-
-                with_att = attention_on_origin(np.reshape(tAlpha, (height, width, 1)), im)
-                cv2.imwrite('with_att' + str(iter_num-1) + '_' + str(i) + '.png', with_att * 255)
-
-                orders = np.argsort(tLogit[0])[::-1]
-                tprobs = softmax(tLogit[0])
-                inds = orders[0:5]
-                tprobs = np.log(tprobs[inds])
-                #     print(tprobs)
-                for j in range(0, 5):
-                    temp_structure.append([np.copy(tAlpha), np.copy(tBeta), np.copy(tState), cur_beam[i][3] + [inds[j]],
-                                           tprobs[j] + cur_beam[i][4]])
-            a = sorted(temp_structure, key=lambda x: x[4], reverse=True)
-            cur_beam = a[0:5]
-            for j in range(0, 5):
-                print(cur_beam[j][3])
-                if (cur_beam[j][3][iter_num - 1] == 0):
-                    latex_array = cur_beam[j][3]
-                    finish_flag = True
-                    break
-        for c in latex_array:
-            print(self.worddicts_r[c])
-        return latex_array, np.squeeze(x[0])
+        all_cands = self.get_all_candidates(model, sess, x, x_mask)
+        sorted_cands = sorted(all_cands, key=lambda x: x[1], reverse=True)
+        chosen_beam = sorted_cands[0][0]
+        str_list = []
+        for i in range(0, len(chosen_beam)):
+            str_list.append(self.worddicts_r[chosen_beam[i]])
+        print(str(str_list))
+        return chosen_beam, np.squeeze(x[0])
 
 
 if __name__ == "__main__":

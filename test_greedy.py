@@ -118,7 +118,7 @@ class test_code:
         print(width)
 
         with_atts = []
-        for i in range(0, 10):
+        for i in range(0, len(str_list) + 1):
             with_att = attention_on_origin(np.reshape(Beta[i], (height, width, 1)), np.squeeze(x[0]))
             with_atts.append(with_att)
 

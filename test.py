@@ -167,7 +167,7 @@ class test_code:
         str_list = []
         for i in range(0, len(chosen_beam)):
             str_list.append(self.worddicts_r[chosen_beam[i]])
-        print(str(str_list))
+        print(''.join(str_list))
         return chosen_beam, np.squeeze(x[0])
 
 
@@ -180,4 +180,3 @@ if __name__ == "__main__":
     test_obj = test_code()
     latex_ret, im = test_obj.run(batch_selected, chosen_set)
     cv2.imwrite('test_out.png', im * 255)
-    print(latex_ret)

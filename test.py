@@ -31,7 +31,7 @@ class test_code:
 
         self.checkpoint_path = os.path.join(self.home_path, 'save')
         self.max_iters = 100000
-        self.batch_size = 8
+        self.batch_size = 16
         self.valid_batch_size = 2
         self.finetune_encoder_after = -1
         # Evaluation Checkpoint
@@ -40,7 +40,7 @@ class test_code:
         self.SummaryEach = 1000
         self.device = "/gpu:0"
         self.batch_Imagesize = 250000
-        self.valid_batch_Imagesize = 250000
+        self.valid_batch_Imagesize = 500000
         self.maxImagesize = 500000
         self.maxlen = 200
         self.n_epoch = 10000

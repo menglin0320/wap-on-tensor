@@ -78,7 +78,7 @@ class translate():
         self.datasets = ['./data/offline-train.pkl',
                          './data/train_caption.txt']
         self.valid_datasets = ['./data/offline-test.pkl',
-                               './data/valid_caption.txt']
+                               './data/test_caption.txt']
 
     def build_dict(self):
         dictionaries = ['./data/dictionary.txt']

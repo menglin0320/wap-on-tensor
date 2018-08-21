@@ -84,7 +84,7 @@ class translate():
         dictionaries = ['./data/dictionary.txt']
         self.worddicts = load_dict(dictionaries[0])
         self.worddicts_r = [None] * len(self.worddicts)
-        self.worddicts_r[112] = '<sos>'
+        self.worddicts_r.append('<sos>')
         for kk, vv in self.worddicts.items():
             self.worddicts_r[vv] = kk
 

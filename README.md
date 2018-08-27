@@ -1,4 +1,4 @@
-# wap-on-tensor
+# wap-on-tensorflow
 handwritten offline math formula recognizer
 
 # Requirements

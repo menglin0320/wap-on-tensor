@@ -1,7 +1,6 @@
 import tensorflow as tf
 import tensorflow.contrib.layers as layers
 
-from focal_loss import focal_loss
 from zone_out_lstm import ZoneoutLSTMCell
 
 
@@ -202,7 +201,7 @@ class MathFormulaRecognizer():
         onehot = tf.sparse_to_dense(sparse, tf.stack([self.batch_size, self.num_label]), 1.0, 0.0)
         logit = tf.matmul(out, self.w_2logit) + self.bias_2logit
         # make those self just make it easier to debug
-        xentropy = focal_loss(prediction_tensor=logit, target_tensor=onehot)
+        xentropy = tf.nn.softmax_cross_entropy_with_logits(logits=logit, labels=onehot)
         predict = tf.cast(tf.argmax(logit, axis=1), tf.int32)
 
         # print(predict.get_shape())
@@ -333,27 +332,3 @@ class MathFormulaRecognizer():
                 betas.append(beta_t)
         return words, alphas, betas
 
-    def eval_train(self, max_len=10):
-        beta_t = tf.zeros([self.batch_size, self.feature_size], dtype=tf.float32)
-
-        # c = tf.matmul(self.mean_feature,self.w_init2c) + self.bias_init2c
-        out = tf.nn.tanh(tf.matmul(self.mean_feature, self.w_init2hid) + self.bias_init2hid)
-        c = tf.nn.tanh(tf.matmul(self.mean_feature, self.w_init2c) + self.bias_init2c)
-        state = (c, out)
-        self.in_previous_word = tf.tile(tf.constant([self.start_token, ]), [self.batch_size])
-        previous_word = self.in_previous_word
-        alphas = []
-        betas = []
-        corrects = []
-        total_correct = 0.0
-        with tf.variable_scope('Decoder'):
-            for i in range(0, max_len):
-                # have alpha_t for debugging
-                cur_correct, loss, beta_t, state, out = self.decoding_one_word_train(beta_t, state, out,
-                                                                                     previous_word, i)
-                tf.get_variable_scope().reuse_variables()
-                total_correct = total_correct + cur_correct
-                corrects.append(cur_correct)
-                previous_word = self.y[:, i]
-                betas.append(beta_t)
-        return total_correct, alphas, betas, corrects

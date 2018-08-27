@@ -193,10 +193,8 @@ def write_out(captions, out_file_name):
             f.write(line + '\n')
 
 if __name__ == "__main__":
-    if len(sys.argv) != 3:
-        raise ValueError('please give two args to specify image batch and set')
-    chosen_set = sys.argv[1]
-    mode = sys.argv[2]
+    chosen_set = 'valid'
+    mode = 'greedy'
     translate_obj = translate(mode)
     captions = translate_obj.run(chosen_set, mode)
     write_out(captions, 'incorrect_trans.txt')

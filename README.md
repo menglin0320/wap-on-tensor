@@ -11,7 +11,7 @@ sudo sh ./installation.sh
 Tensorflow is not on requirements.txt because it's better for users to download it themselves.
 You have to download data from (jianshu's repo)[https://github.com/JianshuZhang/WAP], I modified his script to generate pkl so they work on python 3.5 now.
 
-#Usage
+# Usage
 run
 ```shell
 python3 train.py

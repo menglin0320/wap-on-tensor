@@ -45,7 +45,7 @@ I didn't implement adaptive weight noise, instead I chose to implement zoneout r
 Potentially it may benefit if you apply other regularizers on vgg like encoder
 
 # Reference:
-This work is based on (Jianshu's work)[https://github.com/JianshuZhang/WAP], Also you can get training and validation data on his repo.
+This work is based on [Jianshu's work](https://github.com/JianshuZhang/WAP), Also you can get training and validation data on his repo.
 
 # Performance:
 I didn't really tested the model's performance but LinJM told me that my model achieved exp rate 0.335 (330/985 ).

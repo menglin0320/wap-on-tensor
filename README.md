@@ -38,18 +38,18 @@ python3 translate_and_calc_exp.py
 ```
 to get a text file that has all the translations on validation set. And the exp rate on validation set will be printed.
 
-# limitation
-I didn't implement the dense encoder version of the model
-
-I didn't implement adaptive weight noise, instead I chose to implement zoneout regularizer on lstm.
-Potentially it may benefit if you apply other regularizers on vgg like encoder
-
 # Reference:
 This work is based on [Jianshu's work](https://github.com/JianshuZhang/WAP), Also you can get training and validation data on his repo.
 
 # Performance:
 I didn't really tested the model's performance but LinJM told me that my model achieved exp rate 0.335 (330/985 ).
 It's fairly low compare to orginal work's performance. But I used less resource.
+
+# limitation
+I didn't implement the dense encoder version of the model
+
+I didn't implement adaptive weight noise, instead I chose to implement zoneout regularizer on lstm.
+Potentially it may benefit if you apply other regularizers on vgg like encoder
 
 # Some discussion
 You may notice that for some reason I used a huge learning rate to start, but on original work the lr is set to 0.0001 at the beginning. I didn't really try to match every detail when implementing this model.

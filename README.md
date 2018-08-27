@@ -3,13 +3,17 @@ handwritten offline math formula recognizer
 
 # Requirements
 supported python version 3.5
+
 Tensorflow >= 1.6.0
+
 Open command run:
 ```shell
 sudo sh ./installation.sh
 ```
-Tensorflow is not on requirements.txt because it's better for users to download it themselves.
-You have to download data from (jianshu's repo)[https://github.com/JianshuZhang/WAP], I modified his script to generate pkl so they work on python 3.5 now.
+
+Tensorflow is not on requirements.txt because users who's interested in this repo should have gpu version tensorflow installed already.
+You have to download data from [jianshu's repo](https://github.com/JianshuZhang/WAP).
+But you have to use my scripts in folder data to generate pkls if you are using python 3.5.
 
 # Usage
 run
@@ -18,15 +22,15 @@ python3 train.py
 ```
 to train the model.
 
-If you want to change parameters, most of them are on the file Recognizer.py
+If you want to change parameters, most of them are in the file Recognizer.py
 
 After you train the model
 run
 ```shell
-python3 test <batchnumber> <set(train or valid)>
-python3 test_greedy <batchnumber> <set(train or valid)>
+python3 test.py <batchnumber> <set(train or valid)>
+python3 test_greedy.py <batchnumber> <set(train or valid)>
 ```
-to translate one image on a batch to latex. Test uses beamsearch and test_greedy uses greedy search.
+to translate one image on a batch to latex. test.py uses beamsearch and test_greedy.py uses greedy search.
 
 run
 ```shell
@@ -34,8 +38,9 @@ python3 translate_and_calc_exp.py
 ```
 to get a text file that has all the translations on validation set using greedy search. And the exp rate on validation set will be printed.
 
-#limitation
+# limitation
 I didn't implement the dense encoder version of the model
+
 I didn't implement adaptive weight noise, instead I chose to implement zoneout regularizer on lstm.
 Potentially it may benefit if you apply other regularizers on vgg like encoder
 

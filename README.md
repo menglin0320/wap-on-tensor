@@ -38,9 +38,6 @@ python3 translate_and_calc_exp.py
 ```
 to get a text file that has all the translations on validation set. And the exp rate on validation set will be printed.
 
-# Reference:
-This work is based on [Jianshu's work](https://github.com/JianshuZhang/WAP), Also you can get training and validation data on his repo.
-
 # Performance:
 I didn't really tested the model's performance but LinJM told me that my model achieved exp rate 0.335 (330/985 ).
 It's fairly low compare to orginal work's performance. But I used less resource.
@@ -58,6 +55,8 @@ If anyone is able to figure out why I need such a huge learning rate to start, I
 There is another detail that confused me. I discussed with Jianshu about if we have to write a specific batch norm that takes the mask to make the model really work. And he told me that for some unknown reason, this model still works even if we just use normal batch norm.
 But when I implement the model, if the vgg like encoder is batchnorm after relu, when I set is_training to False on batch norm, the model's performance become very poor Then I tried relu after batchnorm. It kind of works. But I don't why there's this difference or there's hidden but in my code.
 
+# Reference:
+This work is based on [Jianshu's work](https://github.com/JianshuZhang/WAP), Also you can get training and validation data on his repo.
 
 
 

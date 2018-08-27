@@ -36,7 +36,7 @@ run
 ```shell
 python3 translate_and_calc_exp.py
 ```
-to get a text file that has all the translations on validation set using greedy search. And the exp rate on validation set will be printed.
+to get a text file that has all the translations on validation set. And the exp rate on validation set will be printed.
 
 # limitation
 I didn't implement the dense encoder version of the model
@@ -52,11 +52,11 @@ I didn't really tested the model's performance but LinJM told me that my model a
 It's fairly low compare to orginal work's performance. But I used less resource.
 
 # Some discussion
-You may notice that for some reason I used a huge learning rate to start, but on original work the lr is set to 0.0001 at the beginning. I didn't really try to match every detail when implementing this model. And I'm already satisfied because it works.
-But if anyone is able to figure out why I need such a huge learning rate to start, I'll be very thanksful.
+You may notice that for some reason I used a huge learning rate to start, but on original work the lr is set to 0.0001 at the beginning. I didn't really try to match every detail when implementing this model.
+If anyone is able to figure out why I need such a huge learning rate to start, I'll be very thanksful.
 
 There is another detail that confused me. I discussed with Jianshu about if we have to write a specific batch norm that takes the mask to make the model really work. And he told me that for some unknown reason, this model still works even if we just use normal batch norm.
-But when I implement the model, if the vgg like encoder is batchnorm after relu, when I set is_training to False on batch norm, the model's performance become very poor on validation and training set. Then I tried relu after batchnorm. It kind of works.
+But when I implement the model, if the vgg like encoder is batchnorm after relu, when I set is_training to False on batch norm, the model's performance become very poor Then I tried relu after batchnorm. It kind of works. But I don't why there's this difference or there's hidden but in my code.
 
 
 

@@ -11,7 +11,7 @@ Open command run:
 sudo sh ./installation.sh
 ```
 
-Tensorflow is not on requirements.txt because users who's interested in this repo should have gpu version tensorflow installed already.
+Tensorflow is not on requirements.txt because if you already have gpu vesion tensorflow installed, you'll have to comment out that line. And I believe most people who's intereseted on this repor already have gpu version tensorflow installed.
 You have to download data from [jianshu's repo](https://github.com/JianshuZhang/WAP).
 But you have to use my scripts in folder data to generate pkls if you are using python 3.5.
 
